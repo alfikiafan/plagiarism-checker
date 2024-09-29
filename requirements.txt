@@ -1,0 +1,5 @@
+customtkinter
+python-docx
+PyPDF2
+pandas
+openpyxl
