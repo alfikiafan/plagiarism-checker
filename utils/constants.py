@@ -6,3 +6,6 @@ PROGRAMMING_EXTENSIONS = [
     '.html', '.css', '.php', '.sql', '.rb', '.go', 
     '.rs', '.kt', '.swift'
 ]
+
+THRESHOLD_DEFAULT = 80.0
+MAX_REDUCTION_DEFAULT = 20.0

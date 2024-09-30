@@ -2,14 +2,11 @@
 
 import os
 from docx import Document
+from utils.constants import PROGRAMMING_EXTENSIONS
 import PyPDF2
 
 class FileReader:
-    programming_extensions = [
-        '.py', '.java', '.js', '.c', '.cpp', '.h', '.hpp', 
-        '.html', '.css', '.php', '.sql', '.rb', '.go', 
-        '.rs', '.kt', '.swift'
-    ]
+    programming_extensions = PROGRAMMING_EXTENSIONS
 
     def read_file(self, filepath):
         """

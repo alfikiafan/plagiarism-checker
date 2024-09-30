@@ -3,6 +3,7 @@
 import customtkinter as ctk
 from tkinter import filedialog, ttk
 from controller.plagiarism_controller import PlagiarismController
+from utils.constants import THRESHOLD_DEFAULT, MAX_REDUCTION_DEFAULT
 import pandas as pd
 import os
 import difflib
@@ -95,13 +96,29 @@ class PlagiarismApp(ctk.CTk):
         files = self.file_entry.get().split(', ')
         output_file = self.output_entry.get()
 
-        try:
-            threshold = float(self.threshold_entry.get())
-            max_reduction = float(self.max_reduction_entry.get())
-        except ValueError:
-            self.result_label.configure(text="Threshold dan pengurangan maksimal harus berupa angka.")
-            return
+        threshold_value = self.threshold_entry.get()
+        reduction_value = self.max_reduction_entry.get()
+        
+        if not threshold_value:
+            threshold = THRESHOLD_DEFAULT
+        else:
+            try:
+                threshold = float(threshold_value)
+            except ValueError:
+                self.result_label.configure(text="Threshold harus berupa angka.")
+                return
 
+        # Jika pengurangan maksimal tidak diisi, isi dengan nilai default (20)
+        if not reduction_value:
+            max_reduction = MAX_REDUCTION_DEFAULT
+        else:
+            try:
+                max_reduction = float(reduction_value)
+            except ValueError:
+                self.result_label.configure(text="Pengurangan maksimal harus berupa angka.")
+                return
+
+        # Periksa apakah file yang dipilih cukup
         if not files or len(files) < 2:
             self.result_label.configure(text="Silakan pilih minimal dua file untuk diperiksa.")
             return
@@ -148,11 +165,20 @@ class PlagiarismApp(ctk.CTk):
         output_window = ctk.CTkToplevel(self)
         output_window.title("Hasil Pengecekan Plagiasi")
         output_window.geometry("800x600")
-        output_window.attributes("-topmost", True)
 
         # Tabel 1: Persentase Kesamaan
         similarity_label = ctk.CTkLabel(output_window, text="Persentase Kesamaan", font=ctk.CTkFont(size=18, weight="bold"))
         similarity_label.pack(pady=5)
+
+        # Kotak Pencarian untuk mencari di tabel Persentase Kesamaan
+        search_frame_similarity = ctk.CTkFrame(output_window)
+        search_frame_similarity.pack(pady=5, padx=10, fill="x")
+
+        search_label_similarity = ctk.CTkLabel(search_frame_similarity, text="Cari:", font=ctk.CTkFont(size=14))
+        search_label_similarity.pack(side="left", padx=5)
+
+        search_entry_similarity = ctk.CTkEntry(search_frame_similarity, placeholder_text="Masukkan kata kunci pencarian...")
+        search_entry_similarity.pack(side="left", fill="x", expand=True, padx=5)
 
         similarity_frame = ctk.CTkFrame(output_window)
         similarity_frame.pack(pady=5, padx=10, fill="both", expand=True)
@@ -185,20 +211,52 @@ class PlagiarismApp(ctk.CTk):
 
         similarity_scroll.configure(command=similarity_table.yview)
 
-        # Set header untuk tabel dengan cluster
         for col in similarity_columns:
-            similarity_table.heading(col, text=col)
-            similarity_table.column(col, anchor='center', width=150)
+            if col == "File 1" or col == "File 2":
+                similarity_table.heading(col, text=col)
+                similarity_table.column(col, anchor='w', width=150)
+            else:
+                similarity_table.heading(col, text=col)
+                similarity_table.column(col, anchor='center', width=150)
 
-        # Menampilkan data ke tabel
-        for index, row in df_similarity.iterrows():
-            similarity_table.insert('', 'end', values=list(row))
+        # Function to populate the similarity table with data
+        def populate_similarity_table(data):
+            similarity_table.delete(*similarity_table.get_children())  # Clear existing data
+            for index, row in data.iterrows():
+                similarity_table.insert('', 'end', values=list(row))
+
+        # Populate the table with the full data initially
+        populate_similarity_table(df_similarity)
+
+        # Function to filter data based on search query in similarity table
+        def search_similarity_table(*args):
+            query = search_entry_similarity.get().lower()
+            if query == "":  # If the search box is empty, show all data
+                populate_similarity_table(df_similarity)
+            else:
+                filtered_data = df_similarity[
+                    df_similarity.apply(lambda row: any(query in str(val).lower() for val in row), axis=1)
+                ]
+                populate_similarity_table(filtered_data)
+
+        # Bind the search function to the search entry
+        search_entry_similarity.bind('<KeyRelease>', search_similarity_table)
 
         similarity_table.pack(fill="both", expand=True)
 
         # Tabel 2: Pengurangan Nilai
         reduction_label = ctk.CTkLabel(output_window, text="Pengurangan Nilai", font=ctk.CTkFont(size=18, weight="bold"))
         reduction_label.pack(pady=5)
+
+        # Kotak Pencarian untuk mencari di tabel Pengurangan Nilai
+        search_frame_reduction = ctk.CTkFrame(output_window)
+        search_frame_reduction.pack(pady=5, padx=10, fill="x")
+
+        search_label_reduction = ctk.CTkLabel(search_frame_reduction, text="Cari:", font=ctk.CTkFont(size=14))
+        search_label_reduction.pack(side="left", padx=5)
+
+        search_entry_reduction = ctk.CTkEntry(search_frame_reduction, placeholder_text="Masukkan kata kunci pencarian...")
+        search_entry_reduction.pack(side="left", fill="x", expand=True, padx=5)
 
         reduction_frame = ctk.CTkFrame(output_window)
         reduction_frame.pack(pady=5, padx=10, fill="both", expand=True)
@@ -212,11 +270,35 @@ class PlagiarismApp(ctk.CTk):
         reduction_scroll.configure(command=reduction_table.yview)
 
         for col in reduction_columns:
-            reduction_table.heading(col, text=col)
-            reduction_table.column(col, anchor='center', width=150)
+            if col == "Nama File":
+                reduction_table.heading(col, text=col)
+                reduction_table.column(col, anchor='w', width=150)
+            else:
+                reduction_table.heading(col, text=col)
+                reduction_table.column(col, anchor='center', width=150)
 
-        for index, row in df_reduction.iterrows():
-            reduction_table.insert('', 'end', values=list(row))
+        # Function to populate the reduction table with data
+        def populate_reduction_table(data):
+            reduction_table.delete(*reduction_table.get_children())
+            for index, row in data.iterrows():
+                reduction_table.insert('', 'end', values=list(row))
+
+        # Populate the table with the full data initially
+        populate_reduction_table(df_reduction)
+
+        # Function to filter data based on search query in reduction table
+        def search_reduction_table(*args):
+            query = search_entry_reduction.get().lower()
+            if query == "":  # If the search box is empty, show all data
+                populate_reduction_table(df_reduction)
+            else:
+                filtered_data = df_reduction[
+                    df_reduction.apply(lambda row: any(query in str(val).lower() for val in row), axis=1)
+                ]
+                populate_reduction_table(filtered_data)
+
+        # Bind the search function to the search entry
+        search_entry_reduction.bind('<KeyRelease>', search_reduction_table)
 
         reduction_table.pack(fill="both", expand=True)
 
@@ -244,8 +326,8 @@ class PlagiarismApp(ctk.CTk):
         comparison_window = ctk.CTkToplevel(self)
         comparison_window.title(f"Perbandingan: {file1} vs {file2}")
         comparison_window.geometry("900x600")
-
-        comparison_window.attributes("-topmost", True)
+        comparison_window.lift()
+        # comparison_window.attributes("-topmost", True)
 
         # Label judul
         title_label = ctk.CTkLabel(comparison_window, text=f"Perbandingan: {file1} vs {file2}", font=ctk.CTkFont(size=18, weight="bold"))
@@ -310,9 +392,9 @@ class PlagiarismApp(ctk.CTk):
         """
         ext = os.path.splitext(filepath)[1].lower()
         if ext in self.controller.file_reader.programming_extensions:
-            widget.configure(font=("Consolas", 12))  # Set font Consolas untuk file kode
+            widget.configure(font=("Consolas", 12))
         else:
-            widget.configure(font=("Open Sans", 12))  # Default font jika bukan file kode
+            widget.configure(font=("Open Sans", 12))
 
     def sync_scroll_vertical(self, text1_widget, text2_widget, *args):
         """

@@ -90,6 +90,10 @@ class PlagiarismController:
         tfidf_matrix = vectorizer.fit_transform(contents)
 
         # Step 2: Lakukan clustering dengan KMeans
+        unique_points = len(set(tuple(row.toarray()[0]) for row in tfidf_matrix))  # Jumlah poin unik
+        if n_clusters > unique_points:
+            n_clusters = unique_points
+            
         kmeans = KMeans(n_clusters=n_clusters, random_state=0)
         kmeans.fit(tfidf_matrix)
 
