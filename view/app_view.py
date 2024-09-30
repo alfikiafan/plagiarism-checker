@@ -1,9 +1,11 @@
 # /view/app_view.py
 
+import threading
+import time
 import customtkinter as ctk
 from tkinter import filedialog, ttk
 from controller.plagiarism_controller import PlagiarismController
-from utils.constants import THRESHOLD_DEFAULT, MAX_REDUCTION_DEFAULT
+from utils.constants import THRESHOLD_DEFAULT, MAX_REDUCTION_DEFAULT, ASCENDING_ARROW, DESCENDING_ARROW
 import pandas as pd
 import os
 import difflib
@@ -17,6 +19,7 @@ class PlagiarismApp(ctk.CTk):
         self.resizable(False, False)
         ctk.set_appearance_mode("Dark")
         ctk.set_default_color_theme("blue")
+        self.sorting_order = {}
         self.setup_ui()
 
     def setup_ui(self):
@@ -69,6 +72,26 @@ class PlagiarismApp(ctk.CTk):
 
         self.result_label = ctk.CTkLabel(self.result_frame, text="", wraplength=500)
         self.result_label.pack(padx=5, pady=5)
+    
+    def disable_widgets(self):
+        """
+        Men-disable semua widget di window utama.
+        """
+        for widget in self.winfo_children():
+            try:
+                widget.configure(state="disabled")
+            except:
+                pass
+
+    def enable_widgets(self):
+        """
+        Meng-enable semua widget di window utama.
+        """
+        for widget in self.winfo_children():
+            try:
+                widget.configure(state="normal")
+            except:
+                pass
 
     def browse_files(self):
         file_paths = filedialog.askopenfilenames(
@@ -93,65 +116,80 @@ class PlagiarismApp(ctk.CTk):
             self.output_entry.insert(0, output_path)
 
     def start_process(self):
-        files = self.file_entry.get().split(', ')
-        output_file = self.output_entry.get()
+        # Ubah kursor menjadi "watch" (atau "wait") dan segera perbarui tampilan
+        self.config(cursor="watch")
+        self.update()
+        self.disable_widgets()
 
-        threshold_value = self.threshold_entry.get()
-        reduction_value = self.max_reduction_entry.get()
+        # Fungsi untuk menjalankan proses pengecekan plagiasi
+        def run_plagiarism_check():
+            try:
+                time.sleep(0.1)
+                files = self.file_entry.get().split(', ')
+                output_file = self.output_entry.get()
+
+                threshold_value = self.threshold_entry.get()
+                reduction_value = self.max_reduction_entry.get()
+
+                if not threshold_value:
+                    threshold = THRESHOLD_DEFAULT
+                else:
+                    try:
+                        threshold = float(threshold_value)
+                    except ValueError:
+                        self.result_label.configure(text="Threshold harus berupa angka.")
+                        return
+
+                if not reduction_value:
+                    max_reduction = MAX_REDUCTION_DEFAULT
+                else:
+                    try:
+                        max_reduction = float(reduction_value)
+                    except ValueError:
+                        self.result_label.configure(text="Pengurangan maksimal harus berupa angka.")
+                        return
+
+                if not files or len(files) < 2:
+                    self.result_label.configure(text="Silakan pilih minimal dua file untuk diperiksa.")
+                    return
+
+                if not output_file:
+                    self.result_label.configure(text="Silakan pilih lokasi untuk menyimpan hasil.")
+                    return
+
+                # Proses plagiasi dan clustering
+                df_similarity, df_reduction, error_files = self.controller.process_files(files, threshold, max_reduction)
+
+                if error_files:
+                    error_messages = "\n".join([f"{os.path.basename(k)}: {v}" for k, v in error_files.items()])
+                    self.result_label.configure(text=f"Beberapa file gagal dibaca:\n{error_messages}")
+                else:
+                    self.result_label.configure(text=f"Output berhasil disimpan ke {output_file}")
+
+                # Step 1: Baca konten file
+                files_content = self.controller.files_content
+
+                # Step 2: Cluster file berdasarkan konten file
+                file_cluster_mapping = self.controller.cluster_files_by_content(files_content)
+
+                # Step 3: Tambahkan kolom 'Cluster' ke df_similarity berdasarkan 'File 1'
+                df_similarity['Cluster'] = df_similarity['File 1'].apply(lambda x: file_cluster_mapping.get(os.path.basename(x), 'N/A'))
+
+                # Tampilkan hasil pada window baru
+                self.show_output_window(df_similarity, df_reduction, output_file, file_cluster_mapping)
+                
+            except Exception as e:
+                self.result_label.configure(text=str(e))
+            finally:
+                self.config(cursor="")
+                self.update()
+                self.enable_widgets()
+
+        # Jalankan proses dalam thread terpisah agar tidak memblokir GUI
+        process_thread = threading.Thread(target=run_plagiarism_check)
+        process_thread.start()
         
-        if not threshold_value:
-            threshold = THRESHOLD_DEFAULT
-        else:
-            try:
-                threshold = float(threshold_value)
-            except ValueError:
-                self.result_label.configure(text="Threshold harus berupa angka.")
-                return
-
-        # Jika pengurangan maksimal tidak diisi, isi dengan nilai default (20)
-        if not reduction_value:
-            max_reduction = MAX_REDUCTION_DEFAULT
-        else:
-            try:
-                max_reduction = float(reduction_value)
-            except ValueError:
-                self.result_label.configure(text="Pengurangan maksimal harus berupa angka.")
-                return
-
-        # Periksa apakah file yang dipilih cukup
-        if not files or len(files) < 2:
-            self.result_label.configure(text="Silakan pilih minimal dua file untuk diperiksa.")
-            return
-
-        if not output_file:
-            self.result_label.configure(text="Silakan pilih lokasi untuk menyimpan hasil.")
-            return
-
-        try:
-            # Proses plagiasi dan clustering
-            df_similarity, df_reduction, error_files = self.controller.process_files(files, threshold, max_reduction)
-            
-            if error_files:
-                error_messages = "\n".join([f"{os.path.basename(k)}: {v}" for k, v in error_files.items()])
-                self.result_label.configure(text=f"Beberapa file gagal dibaca:\n{error_messages}")
-            else:
-                self.result_label.configure(text=f"Output berhasil disimpan ke {output_file}")
-            
-            # Step 1: Baca konten file
-            files_content = self.controller.files_content  # Konten file sudah dibaca di controller
-
-            # Step 2: Cluster file berdasarkan konten file
-            file_cluster_mapping = self.controller.cluster_files_by_content(files_content)
-
-            # Step 3: Tambahkan kolom 'Cluster' ke df_similarity berdasarkan 'File 1'
-            df_similarity['Cluster'] = df_similarity['File 1'].apply(lambda x: file_cluster_mapping.get(os.path.basename(x), 'N/A'))
-
-            # Tampilkan hasil pada window baru
-            self.show_output_window(df_similarity, df_reduction, output_file)
-        except Exception as e:
-            self.result_label.configure(text=str(e))
-
-    def show_output_window(self, df_similarity, df_reduction, output_file):
+    def show_output_window(self, df_similarity, df_reduction, output_file, file_cluster_mapping):
         # Simpan hasil ke Excel
         try:
             with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
@@ -160,17 +198,20 @@ class PlagiarismApp(ctk.CTk):
         except Exception as e:
             self.result_label.configure(text=f"Error menyimpan file Excel: {e}")
             return
+        
+        # Tambahkan kolom "Cluster" ke df_reduction
+        df_reduction["Cluster"] = df_reduction["Nama File"].apply(lambda file_name: file_cluster_mapping.get(os.path.basename(file_name), 'N/A'))
 
         # Membuat jendela baru untuk menampilkan hasil
         output_window = ctk.CTkToplevel(self)
         output_window.title("Hasil Pengecekan Plagiasi")
         output_window.geometry("800x600")
 
-        # Tabel 1: Persentase Kesamaan
+        # Tabel 1: Persentase Kesamaan (tanpa kolom Cluster)
         similarity_label = ctk.CTkLabel(output_window, text="Persentase Kesamaan", font=ctk.CTkFont(size=18, weight="bold"))
         similarity_label.pack(pady=5)
 
-        # Kotak Pencarian untuk mencari di tabel Persentase Kesamaan
+        # Kotak Pencarian untuk tabel Persentase Kesamaan
         search_frame_similarity = ctk.CTkFrame(output_window)
         search_frame_similarity.pack(pady=5, padx=10, fill="x")
 
@@ -186,9 +227,10 @@ class PlagiarismApp(ctk.CTk):
         similarity_scroll = ctk.CTkScrollbar(similarity_frame, orientation='vertical')
         similarity_scroll.pack(side="right", fill="y")
 
-        # Kolom dengan cluster ditambahkan
-        similarity_columns = ["File 1", "File 2", "Kesamaan (%)", "Cluster"]
+        similarity_columns = ["File 1", "File 2", "Kesamaan (%)"]
         similarity_table = ttk.Treeview(similarity_frame, columns=similarity_columns, show='headings', height=8, yscrollcommand=similarity_scroll.set)
+
+        sort_states_similarity = {col: True for col in similarity_columns}
 
         style = ttk.Style()
         style.theme_use("default")
@@ -211,19 +253,35 @@ class PlagiarismApp(ctk.CTk):
 
         similarity_scroll.configure(command=similarity_table.yview)
 
-        for col in similarity_columns:
-            if col == "File 1" or col == "File 2":
-                similarity_table.heading(col, text=col)
-                similarity_table.column(col, anchor='w', width=150)
-            else:
-                similarity_table.heading(col, text=col)
-                similarity_table.column(col, anchor='center', width=150)
-
         # Function to populate the similarity table with data
         def populate_similarity_table(data):
             similarity_table.delete(*similarity_table.get_children())  # Clear existing data
             for index, row in data.iterrows():
                 similarity_table.insert('', 'end', values=list(row))
+
+        # Function to sort and populate table by a specific column
+        def sort_similarity_table(col):
+            ascending = sort_states_similarity[col]
+            sorted_data = df_similarity.sort_values(by=[col], ascending=ascending)
+            populate_similarity_table(sorted_data)
+            
+            for column in similarity_columns:
+                # Set header text with arrow for the sorted column
+                if column == col:
+                    arrow = ASCENDING_ARROW if ascending else DESCENDING_ARROW
+                    similarity_table.heading(column, text=f"{column} {arrow}")
+                else:
+                    similarity_table.heading(column, text=column)
+
+                    sort_states_similarity[col] = not ascending
+
+        for col in similarity_columns:
+            if col == "File 1" or col == "File 2":
+                similarity_table.heading(col, text=col, command=lambda _col=col: sort_similarity_table(_col))
+                similarity_table.column(col, anchor='w', width=150)
+            else:
+                similarity_table.heading(col, text=col, command=lambda _col=col: sort_similarity_table(_col))
+                similarity_table.column(col, anchor='center', width=150)
 
         # Populate the table with the full data initially
         populate_similarity_table(df_similarity)
@@ -244,11 +302,11 @@ class PlagiarismApp(ctk.CTk):
 
         similarity_table.pack(fill="both", expand=True)
 
-        # Tabel 2: Pengurangan Nilai
+        # Tabel 2: Pengurangan Nilai (dengan kolom Cluster)
         reduction_label = ctk.CTkLabel(output_window, text="Pengurangan Nilai", font=ctk.CTkFont(size=18, weight="bold"))
         reduction_label.pack(pady=5)
 
-        # Kotak Pencarian untuk mencari di tabel Pengurangan Nilai
+        # Kotak Pencarian untuk tabel Pengurangan Nilai
         search_frame_reduction = ctk.CTkFrame(output_window)
         search_frame_reduction.pack(pady=5, padx=10, fill="x")
 
@@ -269,19 +327,33 @@ class PlagiarismApp(ctk.CTk):
 
         reduction_scroll.configure(command=reduction_table.yview)
 
+        sort_states_reduction = {col: True for col in reduction_columns}
+
         for col in reduction_columns:
-            if col == "Nama File":
-                reduction_table.heading(col, text=col)
-                reduction_table.column(col, anchor='w', width=150)
-            else:
-                reduction_table.heading(col, text=col)
-                reduction_table.column(col, anchor='center', width=150)
+            reduction_table.heading(col, text=col, command=lambda _col=col: sort_reduction_table(_col))
+            reduction_table.column(col, anchor='w' if col == "Nama File" else 'center', width=150)
 
         # Function to populate the reduction table with data
         def populate_reduction_table(data):
             reduction_table.delete(*reduction_table.get_children())
             for index, row in data.iterrows():
                 reduction_table.insert('', 'end', values=list(row))
+
+        # Function to sort and populate reduction table by a specific column
+        def sort_reduction_table(col):
+            ascending = sort_states_reduction[col]
+            sorted_data = df_reduction.sort_values(by=[col], ascending=ascending)
+            populate_reduction_table(sorted_data)
+
+            for column in reduction_columns:
+                # Set header text with arrow for the sorted column
+                if column == col:
+                    arrow = ASCENDING_ARROW if ascending else DESCENDING_ARROW
+                    reduction_table.heading(column, text=f"{column} {arrow}")
+                else:
+                    reduction_table.heading(column, text=column)
+
+            sort_states_reduction[col] = not ascending
 
         # Populate the table with the full data initially
         populate_reduction_table(df_reduction)
@@ -299,11 +371,11 @@ class PlagiarismApp(ctk.CTk):
 
         # Bind the search function to the search entry
         search_entry_reduction.bind('<KeyRelease>', search_reduction_table)
-
         reduction_table.pack(fill="both", expand=True)
 
         # Event double click untuk menampilkan perbandingan teks
         similarity_table.bind("<Double-1>", lambda event: self.compare_texts(event, df_similarity))
+        reduction_table.bind("<Double-1>", lambda event: self.show_file_content(event, df_reduction))
 
     def compare_texts(self, event, df_similarity):
         selected_item = event.widget.selection()
@@ -327,7 +399,6 @@ class PlagiarismApp(ctk.CTk):
         comparison_window.title(f"Perbandingan: {file1} vs {file2}")
         comparison_window.geometry("900x600")
         comparison_window.lift()
-        # comparison_window.attributes("-topmost", True)
 
         # Label judul
         title_label = ctk.CTkLabel(comparison_window, text=f"Perbandingan: {file1} vs {file2}", font=ctk.CTkFont(size=18, weight="bold"))
@@ -381,6 +452,47 @@ class PlagiarismApp(ctk.CTk):
 
         # Highlight bagian yang sama
         self.highlight_similarities(text1_widget, text2_widget, content1, content2)
+
+    def show_file_content(self, event, df_reduction):
+        """
+        Menampilkan jendela baru dengan isi file yang diklik dari tabel Pengurangan Nilai.
+        """
+        selected_item = event.widget.selection()
+        if not selected_item:
+            return
+
+        # Ambil nama file dari baris yang dipilih
+        item = event.widget.item(selected_item)
+        file_name = item['values'][0]  # Asumsi "Nama File" ada di kolom pertama
+
+        # Dapatkan konten file dari controller
+        try:
+            content = self.controller.get_file_content(file_name)
+        except Exception as e:
+            self.result_label.configure(text=f"Error saat mengambil konten file: {e}")
+            return
+
+        # Buat jendela baru untuk menampilkan isi file
+        file_content_window = ctk.CTkToplevel(self)
+        file_content_window.title(f"Isi File: {file_name}")
+        file_content_window.geometry("900x600")
+
+        # Label judul
+        title_label = ctk.CTkLabel(file_content_window, text=f"Isi File: {file_name}", font=ctk.CTkFont(size=18, weight="bold"))
+        title_label.pack(pady=10)
+
+        # Frame untuk teks
+        text_frame = ctk.CTkFrame(file_content_window)
+        text_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Text widget untuk menampilkan isi file
+        text_widget = ctk.CTkTextbox(text_frame, wrap="none")
+        text_widget.pack(side="left", fill="both", expand=True)
+        text_widget.insert("1.0", content)
+        text_widget.configure(state="disabled")
+
+        # Atur font sesuai tipe file
+        self.set_programming_font(text_widget, file_name)
 
     def set_programming_font(self, widget, filepath):
         """
