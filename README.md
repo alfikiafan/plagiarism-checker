@@ -11,6 +11,9 @@ Pengecek Plagiasi adalah aplikasi desktop berbasis Python yang memungkinkan peng
 - **Ekspor Hasil:** Hasil pengecekan dapat diekspor ke file Excel (`.xlsx`), menampilkan detail kesamaan antar file dan rekomendasi pengurangan nilai.
 - **Antarmuka Pengguna Modern:** Menggunakan `CustomTkinter` untuk tampilan antarmuka yang modern dan intuitif.
 
+## Screenshots
+
+
 ## Persyaratan Sistem
 
 Sebelum menjalankan aplikasi ini, pastikan Anda memiliki:
@@ -64,7 +67,11 @@ Berikut adalah struktur folder dari proyek ini:
 │   ├── file_reader.py
 │   ├── plagiarism_checker.py
 ├── view/
-│   ├── app_view.py
+│   ├── comparison_display.py
+|   ├── file_content_display.py
+|   ├── file_selection.py
+|   ├── main_window.py
+|   ├── results_display.py
 ├── utils/
 │   ├── __init__.py
 │   ├── helpers.py
