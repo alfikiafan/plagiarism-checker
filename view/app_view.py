@@ -94,7 +94,7 @@ class PlagiarismApp(ctk.CTk):
     def start_process(self):
         files = self.file_entry.get().split(', ')
         output_file = self.output_entry.get()
-        
+
         try:
             threshold = float(self.threshold_entry.get())
             max_reduction = float(self.max_reduction_entry.get())
@@ -111,12 +111,25 @@ class PlagiarismApp(ctk.CTk):
             return
 
         try:
+            # Proses plagiasi dan clustering
             df_similarity, df_reduction, error_files = self.controller.process_files(files, threshold, max_reduction)
+            
             if error_files:
                 error_messages = "\n".join([f"{os.path.basename(k)}: {v}" for k, v in error_files.items()])
                 self.result_label.configure(text=f"Beberapa file gagal dibaca:\n{error_messages}")
             else:
                 self.result_label.configure(text=f"Output berhasil disimpan ke {output_file}")
+            
+            # Step 1: Baca konten file
+            files_content = self.controller.files_content  # Konten file sudah dibaca di controller
+
+            # Step 2: Cluster file berdasarkan konten file
+            file_cluster_mapping = self.controller.cluster_files_by_content(files_content)
+
+            # Step 3: Tambahkan kolom 'Cluster' ke df_similarity berdasarkan 'File 1'
+            df_similarity['Cluster'] = df_similarity['File 1'].apply(lambda x: file_cluster_mapping.get(os.path.basename(x), 'N/A'))
+
+            # Tampilkan hasil pada window baru
             self.show_output_window(df_similarity, df_reduction, output_file)
         except Exception as e:
             self.result_label.configure(text=str(e))
@@ -147,7 +160,8 @@ class PlagiarismApp(ctk.CTk):
         similarity_scroll = ctk.CTkScrollbar(similarity_frame, orientation='vertical')
         similarity_scroll.pack(side="right", fill="y")
 
-        similarity_columns = [str(col) for col in df_similarity.columns]
+        # Kolom dengan cluster ditambahkan
+        similarity_columns = ["File 1", "File 2", "Kesamaan (%)", "Cluster"]
         similarity_table = ttk.Treeview(similarity_frame, columns=similarity_columns, show='headings', height=8, yscrollcommand=similarity_scroll.set)
 
         style = ttk.Style()
@@ -155,7 +169,7 @@ class PlagiarismApp(ctk.CTk):
         style.configure("Treeview",
                         background="#2a2d2e",
                         foreground="white",
-                        rowheight=35,  # Lebih tinggi
+                        rowheight=35,
                         fieldbackground="#343638",
                         bordercolor="#343638",
                         borderwidth=0,
@@ -167,15 +181,16 @@ class PlagiarismApp(ctk.CTk):
                         foreground="white",
                         relief="flat",
                         font=('Segoe UI', 14))
-        style.map("Treeview.Heading",
-                  background=[('active', '#3484F0')])
+        style.map("Treeview.Heading", background=[('active', '#3484F0')])
 
         similarity_scroll.configure(command=similarity_table.yview)
 
+        # Set header untuk tabel dengan cluster
         for col in similarity_columns:
             similarity_table.heading(col, text=col)
             similarity_table.column(col, anchor='center', width=150)
 
+        # Menampilkan data ke tabel
         for index, row in df_similarity.iterrows():
             similarity_table.insert('', 'end', values=list(row))
 
