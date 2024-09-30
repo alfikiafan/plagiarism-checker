@@ -8,6 +8,11 @@ from utils.constants import THRESHOLD_DEFAULT, MAX_REDUCTION_DEFAULT
 import os
 
 class FileSelectionFrame(ctk.CTkFrame):
+    """
+    FileSelectionFrame is a frame that contains the widgets for selecting files
+    and setting the similarity threshold and maximum score deduction. It also
+    contains the logic for starting the plagiarism check process.
+    """
     def __init__(self, parent, controller, main_window):
         super().__init__(parent)
         self.controller = controller
@@ -16,49 +21,49 @@ class FileSelectionFrame(ctk.CTkFrame):
         self.setup_ui()
 
     def setup_ui(self):
-        # Frame untuk input
+        # Frame for input
         frame = ctk.CTkFrame(self)
         frame.pack(pady=5, padx=10, fill="both", expand=True)
 
         frame.grid_columnconfigure(1, weight=1)
         frame.grid_columnconfigure(2, weight=0)
 
-        # Input file (2 atau lebih)
-        file_label = ctk.CTkLabel(frame, text="Pilih File:")
+        # File input (2 or more)
+        file_label = ctk.CTkLabel(frame, text="Select Files:")
         file_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
         self.file_entry = ctk.CTkEntry(frame, placeholder_text="Path to files")
         self.file_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
         file_button = ctk.CTkButton(frame, text="Browse", command=self.browse_files)
         file_button.grid(row=0, column=2, padx=5, pady=5, sticky="e")
 
-        # Threshold persentase kesamaan
-        threshold_label = ctk.CTkLabel(frame, text="Threshold Kesamaan (%)")
+        # Threshold for similarity percentage
+        threshold_label = ctk.CTkLabel(frame, text="Similarity Threshold (%)")
         threshold_label.grid(row=1, column=0, padx=5, pady=5, sticky="w")
         self.threshold_entry = ctk.CTkEntry(frame, placeholder_text="80")
         self.threshold_entry.grid(row=1, column=1, columnspan=2, padx=5, pady=5, sticky="ew")
 
-        # Pengurangan maksimal nilai
-        max_reduction_label = ctk.CTkLabel(frame, text="Pengurangan Maksimal Nilai:")
+        # Maximum score deduction
+        max_reduction_label = ctk.CTkLabel(frame, text="Maximum Score Deduction:")
         max_reduction_label.grid(row=2, column=0, padx=5, pady=5, sticky="w")
         self.max_reduction_entry = ctk.CTkEntry(frame, placeholder_text="20")
         self.max_reduction_entry.grid(row=2, column=1, columnspan=2, padx=5, pady=5, sticky="ew")
 
-        # Pilih lokasi output dengan tombol browse
-        output_label = ctk.CTkLabel(frame, text="Pilih Lokasi Output:")
+        # Select output location with a browse button
+        output_label = ctk.CTkLabel(frame, text="Select Output Location:")
         output_label.grid(row=3, column=0, padx=5, pady=5, sticky="w")
-        self.output_entry = ctk.CTkEntry(frame, placeholder_text="Lokasi Output")
+        self.output_entry = ctk.CTkEntry(frame, placeholder_text="Output Location")
         self.output_entry.grid(row=3, column=1, padx=5, pady=5, sticky="ew")
         output_button = ctk.CTkButton(frame, text="Browse", command=self.browse_output_location)
         output_button.grid(row=3, column=2, padx=5, pady=5, sticky="e")
 
     def browse_files(self):
         file_paths = filedialog.askopenfilenames(
-            title="Pilih 2 atau lebih file", 
+            title="Select 2 or more files", 
             filetypes=[("Supported files", 
                         "*.txt;*.docx;*.pdf;*.py;*.java;*.c;*.cpp;*.h;*.hpp;*.cs;*.js;*.html;*.css;*.php;*.sql;*.rb;*.pl;*.sh;*.swift;*.kt;*.go;*.rs;*.lua;*.r;*.m;*.json;*.xml;*.yaml;*.yml;*.ini;*.cfg;*.conf;*.md;*.rst;*.csv;*.tsv;*.xls;*.xlsx;*.ppt;*.pptx;*.odt;*.ods;*.odp")]
         )
         if len(file_paths) < 2:
-            self.main_window.update_result("Pastikan memilih setidaknya dua file.")
+            self.main_window.update_result("Please make sure to select at least two files.")
             return
         self.file_entry.delete(0, 'end')
         self.file_entry.insert(0, ', '.join(file_paths))
@@ -67,19 +72,19 @@ class FileSelectionFrame(ctk.CTkFrame):
         output_path = filedialog.asksaveasfilename(
             defaultextension=".xlsx", 
             filetypes=[("Excel files", "*.xlsx")], 
-            title="Pilih lokasi dan nama file output"
+            title="Select output location and file name"
         )
         if output_path:
             self.output_entry.delete(0, 'end')
             self.output_entry.insert(0, output_path)
 
     def start_process(self):
-        # Ubah kursor menjadi "watch" (atau "wait") dan segera perbarui tampilan
+        # Change the cursor to "watch" (or "wait") and immediately update the display
         self.main_window.config(cursor="watch")
         self.main_window.update()
         self.disable_widgets()
 
-        # Fungsi untuk menjalankan proses pengecekan plagiasi
+        # Function to run the plagiarism check process
         def run_plagiarism_check():
             try:
                 time.sleep(0.1)
@@ -95,7 +100,7 @@ class FileSelectionFrame(ctk.CTkFrame):
                     try:
                         threshold = float(threshold_value)
                     except ValueError:
-                        self.main_window.update_result("Threshold harus berupa angka.")
+                        self.main_window.update_result("Threshold must be a number.")
                         return
 
                 if not reduction_value:
@@ -104,36 +109,36 @@ class FileSelectionFrame(ctk.CTkFrame):
                     try:
                         max_reduction = float(reduction_value)
                     except ValueError:
-                        self.main_window.update_result("Pengurangan maksimal harus berupa angka.")
+                        self.main_window.update_result("Maximum reduction must be a number.")
                         return
 
                 if not files or len(files) < 2:
-                    self.main_window.update_result("Silakan pilih minimal dua file untuk diperiksa.")
+                    self.main_window.update_result("Please select at least two files to check.")
                     return
 
                 if not output_file:
-                    self.main_window.update_result("Silakan pilih lokasi untuk menyimpan hasil.")
+                    self.main_window.update_result("Please select a location to save the results.")
                     return
 
-                # Proses plagiasi dan clustering
+                # Plagiarism and clustering process
                 df_similarity, df_reduction, error_files = self.controller.process_files(files, threshold, max_reduction)
 
                 if error_files:
                     error_messages = "\n".join([f"{os.path.basename(k)}: {v}" for k, v in error_files.items()])
-                    self.main_window.update_result(f"Beberapa file gagal dibaca:\n{error_messages}")
+                    self.main_window.update_result(f"Some files failed to be read:\n{error_messages}")
                 else:
-                    self.main_window.update_result(f"Output berhasil disimpan ke {output_file}")
+                    self.main_window.update_result(f"Output successfully saved to {output_file}")
 
-                # Step 1: Baca konten file
+                # Step 1: Read file content
                 files_content = self.controller.files_content
 
-                # Step 2: Cluster file berdasarkan konten file
+                # Step 2: Cluster files based on file content
                 file_cluster_mapping = self.controller.cluster_files_by_content(files_content)
 
-                # Step 3: Tambahkan kolom 'Cluster' ke df_similarity berdasarkan 'File 1'
+                # Step 3: Add 'Cluster' column to df_similarity based on 'File 1'
                 df_similarity['Cluster'] = df_similarity['File 1'].apply(lambda x: file_cluster_mapping.get(os.path.basename(x), 'N/A'))
 
-                # Tampilkan hasil pada window baru
+                # Display results in a new window
                 self.main_window.result_frame.show_output_window(df_similarity, df_reduction, output_file, file_cluster_mapping)
                     
             except Exception as e:
@@ -143,13 +148,13 @@ class FileSelectionFrame(ctk.CTkFrame):
                 self.main_window.update()
                 self.enable_widgets()
 
-        # Jalankan proses dalam thread terpisah agar tidak memblokir GUI
+        # Run the process in a separate thread to avoid blocking the GUI
         process_thread = threading.Thread(target=run_plagiarism_check)
         process_thread.start()
 
     def disable_widgets(self):
         """
-        Men-disable semua widget di frame ini.
+        Disable all widgets in this frame.
         """
         for widget in self.winfo_children():
             try:
@@ -159,7 +164,7 @@ class FileSelectionFrame(ctk.CTkFrame):
 
     def enable_widgets(self):
         """
-        Meng-enable semua widget di frame ini.
+        Enable all widgets in this frame.
         """
         for widget in self.winfo_children():
             try:

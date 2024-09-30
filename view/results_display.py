@@ -11,11 +11,11 @@ from view.file_content_display import FileContentDisplayWindow
 class ResultsFrame(ctk.CTkFrame):
     def __init__(self, parent):
         super().__init__(parent, fg_color="#2B2B2B")
-        self.parent = parent  # Referensi ke MainWindow
+        self.parent = parent  # Reference to MainWindow
         self.setup_ui()
 
     def setup_ui(self):
-        # Kotak keterangan hasil
+        # Result description box
         self.result_label = ctk.CTkLabel(self, text="", wraplength=500)
         self.result_label.pack(padx=5, pady=5)
 
@@ -23,35 +23,35 @@ class ResultsFrame(ctk.CTkFrame):
         self.result_label.configure(text=message)
 
     def show_output_window(self, df_similarity, df_reduction, output_file, file_cluster_mapping):
-        # Simpan hasil ke Excel
+        # Save results to Excel
         try:
             with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
-                df_reduction.to_excel(writer, sheet_name='Pengurangan Nilai', index=False)
-                df_similarity.to_excel(writer, sheet_name='Kesamaan', index=False)
+                df_reduction.to_excel(writer, sheet_name='Score Deduction', index=False)
+                df_similarity.to_excel(writer, sheet_name='Similarity', index=False)
         except Exception as e:
-            self.update_result(f"Error menyimpan file Excel: {e}")
+            self.update_result(f"Error saving Excel file: {e}")
             return
 
-        # Tambahkan kolom "Cluster" ke df_reduction
-        df_reduction["Cluster"] = df_reduction["Nama File"].apply(lambda file_name: file_cluster_mapping.get(os.path.basename(file_name), 'N/A'))
+        # Add "Cluster" column to df_reduction
+        df_reduction["Cluster"] = df_reduction["File Name"].apply(lambda file_name: file_cluster_mapping.get(os.path.basename(file_name), 'N/A'))
 
-        # Membuat jendela baru untuk menampilkan hasil
+        # Create a new window to display the results
         output_window = ctk.CTkToplevel(self)
-        output_window.title("Hasil Pengecekan Plagiasi")
+        output_window.title("Plagiarism Check Results")
         output_window.geometry("800x600")
 
-        # Tabel 1: Persentase Kesamaan (tanpa kolom Cluster)
-        similarity_label = ctk.CTkLabel(output_window, text="Persentase Kesamaan", font=ctk.CTkFont(size=18, weight="bold"))
+        # Table 1: Similarity Percentage (without the Cluster column)
+        similarity_label = ctk.CTkLabel(output_window, text="Similarity Percentage", font=ctk.CTkFont(size=18, weight="bold"))
         similarity_label.pack(pady=5)
 
-        # Kotak Pencarian untuk tabel Persentase Kesamaan
+        # Search box for the Similarity Percentage table
         search_frame_similarity = ctk.CTkFrame(output_window)
         search_frame_similarity.pack(pady=5, padx=10, fill="x")
 
-        search_label_similarity = ctk.CTkLabel(search_frame_similarity, text="Cari:", font=ctk.CTkFont(size=14))
+        search_label_similarity = ctk.CTkLabel(search_frame_similarity, text="Search:", font=ctk.CTkFont(size=14))
         search_label_similarity.pack(side="left", padx=5)
 
-        search_entry_similarity = ctk.CTkEntry(search_frame_similarity, placeholder_text="Masukkan kata kunci pencarian...")
+        search_entry_similarity = ctk.CTkEntry(search_frame_similarity, placeholder_text="Enter search keyword...")
         search_entry_similarity.pack(side="left", fill="x", expand=True, padx=5)
 
         similarity_frame = ctk.CTkFrame(output_window)
@@ -60,7 +60,7 @@ class ResultsFrame(ctk.CTkFrame):
         similarity_scroll = ctk.CTkScrollbar(similarity_frame, orientation='vertical')
         similarity_scroll.pack(side="right", fill="y")
 
-        similarity_columns = ["File 1", "File 2", "Kesamaan (%)"]
+        similarity_columns = ["File 1", "File 2", "Similarity (%)"]
         similarity_table = ttk.Treeview(similarity_frame, columns=similarity_columns, show='headings', height=8, yscrollcommand=similarity_scroll.set)
 
         sort_states_similarity = {col: True for col in similarity_columns}
@@ -135,18 +135,18 @@ class ResultsFrame(ctk.CTkFrame):
 
         similarity_table.pack(fill="both", expand=True)
 
-        # Tabel 2: Pengurangan Nilai (dengan kolom Cluster)
-        reduction_label = ctk.CTkLabel(output_window, text="Pengurangan Nilai", font=ctk.CTkFont(size=18, weight="bold"))
+        # Table 2: Score Deduction (with Cluster column)
+        reduction_label = ctk.CTkLabel(output_window, text="Score Deduction", font=ctk.CTkFont(size=18, weight="bold"))
         reduction_label.pack(pady=5)
 
-        # Kotak Pencarian untuk tabel Pengurangan Nilai
+        # Search box for the Score Deduction table
         search_frame_reduction = ctk.CTkFrame(output_window)
         search_frame_reduction.pack(pady=5, padx=10, fill="x")
 
-        search_label_reduction = ctk.CTkLabel(search_frame_reduction, text="Cari:", font=ctk.CTkFont(size=14))
+        search_label_reduction = ctk.CTkLabel(search_frame_reduction, text="Search:", font=ctk.CTkFont(size=14))
         search_label_reduction.pack(side="left", padx=5)
 
-        search_entry_reduction = ctk.CTkEntry(search_frame_reduction, placeholder_text="Masukkan kata kunci pencarian...")
+        search_entry_reduction = ctk.CTkEntry(search_frame_reduction, placeholder_text="Enter search keyword...")
         search_entry_reduction.pack(side="left", fill="x", expand=True, padx=5)
 
         reduction_frame = ctk.CTkFrame(output_window)
@@ -164,7 +164,7 @@ class ResultsFrame(ctk.CTkFrame):
 
         for col in reduction_columns:
             reduction_table.heading(col, text=col, command=lambda _col=col: sort_reduction_table(_col))
-            reduction_table.column(col, anchor='w' if col == "Nama File" else 'center', width=150)
+            reduction_table.column(col, anchor='w' if col == "File Name" else 'center', width=150)
 
         # Function to populate the reduction table with data
         def populate_reduction_table(data):
@@ -206,7 +206,7 @@ class ResultsFrame(ctk.CTkFrame):
         search_entry_reduction.bind('<KeyRelease>', search_reduction_table)
         reduction_table.pack(fill="both", expand=True)
 
-        # Event double click untuk menampilkan perbandingan teks
+        # Double click event to display text comparison
         similarity_table.bind("<Double-1>", lambda event: self.open_comparison_window(event, df_similarity))
         reduction_table.bind("<Double-1>", lambda event: self.open_file_content_window(event, df_reduction))
 
@@ -215,11 +215,11 @@ class ResultsFrame(ctk.CTkFrame):
         if not selected_item:
             return
 
-        # Ambil nama file dari baris yang dipilih
+        # Get the file names from the selected row
         item = event.widget.item(selected_item)
         file1, file2 = item['values'][0], item['values'][1]
 
-        # Buat jendela perbandingan
+        # Create a comparison window
         ComparisonDisplayWindow(self, file1, file2, self.parent.controller)
 
     def open_file_content_window(self, event, df_reduction):
@@ -227,16 +227,16 @@ class ResultsFrame(ctk.CTkFrame):
         if not selected_item:
             return
 
-        # Ambil nama file dari baris yang dipilih
+        # Get the file name from the selected row
         item = event.widget.item(selected_item)
-        file_name = item['values'][0]  # Asumsi "Nama File" ada di kolom pertama
+        file_name = item['values'][0]  # Assuming "File Name" is in the first column
 
-        # Dapatkan konten file dari controller
+        # Get the file content from the controller
         try:
             content = self.parent.controller.get_file_content(file_name)
         except Exception as e:
-            self.update_result(f"Error saat mengambil konten file: {e}")
+            self.update_result(f"Error retrieving file content: {e}")
             return
 
-        # Buat jendela perbandingan isi file
+        # Create a window to display the file content
         FileContentDisplayWindow(self, file_name, content, self.parent.controller)

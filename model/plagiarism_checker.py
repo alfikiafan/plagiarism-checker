@@ -8,28 +8,28 @@ import os
 class PlagiarismChecker:
     def calculate_similarity(self, text1, text2):
         """
-        Menghitung rasio kesamaan antara dua teks menggunakan difflib.
+        Calculates the similarity ratio between two texts using difflib.
 
         Args:
-            text1 (str): Teks pertama.
-            text2 (str): Teks kedua.
+            text1 (str): The first text.
+            text2 (str): The second text.
 
         Returns:
-            float: Rasio kesamaan antara 0.0 hingga 1.0.
+            float: Similarity ratio between 0.0 and 1.0.
         """
         return difflib.SequenceMatcher(None, text1, text2).ratio()
 
     def calculate_reduction(self, plagiarism_percent, threshold=80, max_reduction=20):
         """
-        Menghitung pengurangan nilai berdasarkan persentase plagiasi.
+        Calculates the score reduction based on the percentage of plagiarism.
 
         Args:
-            plagiarism_percent (float): Persentase plagiasi.
-            threshold (float, optional): Batas minimum persentase plagiasi untuk pengurangan nilai. Default adalah 80.
-            max_reduction (float, optional): Pengurangan nilai maksimal yang diizinkan. Default adalah 20.
+            plagiarism_percent (float): The percentage of plagiarism.
+            threshold (float, optional): The minimum plagiarism percentage threshold for score reduction. Default is 80.
+            max_reduction (float, optional): The maximum allowed score reduction. Default is 20.
 
         Returns:
-            float: Persentase pengurangan nilai.
+            float: Percentage of score reduction.
         """
         if plagiarism_percent <= threshold:
             return 0.0
@@ -40,20 +40,20 @@ class PlagiarismChecker:
 
     def process_plagiarism(self, files_content, threshold, max_reduction):
         """
-        Memproses pengecekan plagiasi antara berbagai file.
+        Processes plagiarism checking between multiple files.
 
         Args:
-            files_content (dict): Dictionary dengan key sebagai nama file dan value sebagai konten file.
-            threshold (float): Batas minimum persentase kesamaan untuk mengurangi nilai.
-            max_reduction (float): Pengurangan maksimal nilai yang diperbolehkan.
+            files_content (dict): Dictionary with file names as keys and file content as values.
+            threshold (float): Minimum similarity percentage threshold for score reduction.
+            max_reduction (float): Maximum allowed score reduction.
 
         Returns:
             tuple: (df_similarity, df_reduction)
-                - df_similarity (pd.DataFrame): DataFrame berisi persentase kesamaan antar file.
-                - df_reduction (pd.DataFrame): DataFrame berisi persentase pengurangan nilai per file.
+                - df_similarity (pd.DataFrame): DataFrame containing similarity percentages between files.
+                - df_reduction (pd.DataFrame): DataFrame containing score reduction percentages per file.
         """
         if len(files_content) < 2:
-            raise ValueError("Pastikan ada setidaknya dua file untuk dibandingkan.")
+            raise ValueError("Make sure there are at least two files to compare.")
 
         reduction_dict = {os.path.basename(filename): 0.0 for filename in files_content.keys()}
         similarities = []
@@ -73,25 +73,25 @@ class PlagiarismChecker:
 
         data_reduction = [
             {
-                "Nama File": student,
-                "Persentase Pengurangan Nilai (%)": round(reduction, 2) if isinstance(reduction, float) else reduction
+                "File Name": student,
+                "Score Reduction Percentage (%)": round(reduction, 2) if isinstance(reduction, float) else reduction
             }
             for student, reduction in reduction_dict.items()
         ]
 
         df_reduction = pd.DataFrame(data_reduction)
-        df_reduction = df_reduction.sort_values(by="Persentase Pengurangan Nilai (%)", ascending=False)
+        df_reduction = df_reduction.sort_values(by="Score Reduction Percentage (%)", ascending=False)
 
         data_similarity = [
             {
                 "File 1": file1,
                 "File 2": file2,
-                "Kesamaan (%)": sim
+                "Similarity (%)": sim
             }
             for file1, file2, sim in similarities
         ]
 
         df_similarity = pd.DataFrame(data_similarity)
-        df_similarity = df_similarity.sort_values(by="Kesamaan (%)", ascending=False)
+        df_similarity = df_similarity.sort_values(by="Similarity (%)", ascending=False)
 
         return df_similarity, df_reduction

@@ -10,27 +10,27 @@ class PlagiarismController:
     def __init__(self):
         self.file_reader = FileReader()
         self.plagiarism_checker = PlagiarismChecker()
-        self.files_content = {}  # Menyimpan konten file yang telah dibaca
+        self.files_content = {}  # Stores the content of the read files
 
     def process_files(self, file_paths, threshold, max_reduction):
         """
-        Memproses file-file yang dipilih untuk pengecekan plagiasi.
+        Processes the selected files for plagiarism checking.
 
         Args:
-            file_paths (list): Daftar path file yang akan diproses.
-            threshold (float): Batas minimum persentase kesamaan untuk mengurangi nilai.
-            max_reduction (float): Pengurangan maksimal nilai yang diperbolehkan.
+            file_paths (list): List of file paths to be processed.
+            threshold (float): Minimum similarity percentage to trigger score reduction.
+            max_reduction (float): Maximum allowed score reduction.
 
         Returns:
             tuple: (df_similarity, df_reduction, error_files)
-                - df_similarity (pd.DataFrame): DataFrame berisi persentase kesamaan antar file.
-                - df_reduction (pd.DataFrame): DataFrame berisi persentase pengurangan nilai per file.
-                - error_files (dict): Dictionary berisi file yang gagal diproses beserta error-nya.
+                - df_similarity (pd.DataFrame): DataFrame containing similarity percentages between files.
+                - df_reduction (pd.DataFrame): DataFrame containing the percentage of score reduction per file.
+                - error_files (dict): Dictionary containing files that failed to be processed along with their errors.
         """
         self.files_content = {}
         error_files = {}
 
-        # Membaca semua file yang dipilih
+        # Read all selected files
         for path in file_paths:
             try:
                 content = self.file_reader.read_file(path)
@@ -38,13 +38,13 @@ class PlagiarismController:
             except IOError as e:
                 error_files[path] = str(e)
 
-        # Memeriksa apakah ada file yang berhasil dibaca
+        # Check if at least two files were successfully read
         if len(self.files_content) < 2:
             if len(error_files) == len(file_paths):
-                raise ValueError("Semua file gagal dibaca. Tidak ada file yang bisa dibandingkan.")
-            raise ValueError("Pastikan ada setidaknya dua file yang berhasil dibaca untuk dibandingkan.")
+                raise ValueError("All files failed to be read. No files to compare.")
+            raise ValueError("Make sure at least two files have been successfully read for comparison.")
 
-        # Memproses plagiasi menggunakan PlagiarismChecker
+        # Process plagiarism using PlagiarismChecker
         df_similarity, df_reduction = self.plagiarism_checker.process_plagiarism(
             self.files_content, threshold, max_reduction
         )
@@ -53,51 +53,51 @@ class PlagiarismController:
 
     def get_file_content(self, filename):
         """
-        Mengambil konten file berdasarkan nama file.
+        Retrieves file content based on the file name.
 
         Args:
-            filename (str): Nama file.
+            filename (str): File name.
 
         Returns:
-            str: Konten file.
+            str: File content.
 
         Raises:
-            KeyError: Jika file tidak ditemukan.
+            KeyError: If the file is not found.
         """
-        # Mencari file berdasarkan basename
+        # Search for the file by its basename
         for path, content in self.files_content.items():
             if os.path.basename(path) == filename:
                 return content
-        raise KeyError(f"File {filename} tidak ditemukan.")
+        raise KeyError(f"File {filename} not found.")
 
     def cluster_files_by_content(self, files_content, n_clusters=5):
         """
-        Melakukan clustering terhadap file berdasarkan isi konten mereka.
+        Clusters files based on their content.
 
         Args:
-            files_content (dict): Dictionary berisi path file dan konten file.
-            n_clusters (int): Jumlah cluster yang diinginkan.
+            files_content (dict): Dictionary containing file paths and their content.
+            n_clusters (int): The desired number of clusters.
 
         Returns:
-            dict: Mapping dari basename file ke nomor cluster.
+            dict: Mapping of the file basename to the cluster number.
         """
         # Step 1: Vectorize the content of each file using TF-IDF
         vectorizer = TfidfVectorizer(stop_words='english')
-        file_paths = list(files_content.keys())  # Path lengkap file
+        file_paths = list(files_content.keys())  # Full file paths
         contents = list(files_content.values())
 
-        # Mengubah konten file menjadi representasi numerik
+        # Convert file content into numerical representation
         tfidf_matrix = vectorizer.fit_transform(contents)
 
-        # Step 2: Lakukan clustering dengan KMeans
-        unique_points = len(set(tuple(row.toarray()[0]) for row in tfidf_matrix))  # Jumlah poin unik
+        # Step 2: Perform clustering with KMeans
+        unique_points = len(set(tuple(row.toarray()[0]) for row in tfidf_matrix))  # Number of unique points
         if n_clusters > unique_points:
             n_clusters = unique_points
             
         kmeans = KMeans(n_clusters=n_clusters, random_state=0)
         kmeans.fit(tfidf_matrix)
 
-        # Step 3: Hasil clustering (basename file_name -> cluster_number)
+        # Step 3: Clustering results (basename file_name -> cluster_number)
         file_cluster_mapping = {os.path.basename(file_paths[i]): kmeans.labels_[i] for i in range(len(file_paths))}
 
         return file_cluster_mapping

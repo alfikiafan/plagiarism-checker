@@ -10,16 +10,16 @@ class FileReader:
 
     def read_file(self, filepath):
         """
-        Membaca file berdasarkan ekstensi dan mengembalikan konten sebagai string.
+        Reads a file based on its extension and returns the content as a string.
 
         Args:
-            filepath (str): Path lengkap ke file yang akan dibaca.
+            filepath (str): Full path to the file to be read.
 
         Returns:
-            str: Konten file dalam bentuk string.
+            str: The content of the file as a string.
 
         Raises:
-            IOError: Jika terjadi kesalahan saat membaca file.
+            IOError: If an error occurs while reading the file.
         """
         ext = os.path.splitext(filepath)[1].lower()
         try:
@@ -30,43 +30,43 @@ class FileReader:
             else:
                 return self.read_text(filepath)
         except Exception as e:
-            raise IOError(f"Error membaca file {filepath}: {e}")
+            raise IOError(f"Error reading file {filepath}: {e}")
 
     def read_text(self, filepath):
         """
-        Membaca file teks (.txt).
+        Reads a text file (.txt).
 
         Args:
-            filepath (str): Path lengkap ke file .txt.
+            filepath (str): Full path to the .txt file.
 
         Returns:
-            str: Konten file teks.
+            str: The content of the text file.
         """
         with open(filepath, 'r', encoding='utf-8') as file:
             return file.read()
 
     def read_docx(self, filepath):
         """
-        Membaca file .docx.
+        Reads a .docx file.
 
         Args:
-            filepath (str): Path lengkap ke file .docx.
+            filepath (str): Full path to the .docx file.
 
         Returns:
-            str: Konten file .docx.
+            str: The content of the .docx file.
         """
         doc = Document(filepath)
         return '\n'.join([para.text for para in doc.paragraphs])
 
     def read_pdf(self, filepath):
         """
-        Membaca file .pdf.
+        Reads a .pdf file.
 
         Args:
-            filepath (str): Path lengkap ke file .pdf.
+            filepath (str): Full path to the .pdf file.
 
         Returns:
-            str: Konten file .pdf.
+            str: The content of the .pdf file.
         """
         with open(filepath, 'rb') as file:
             reader = PyPDF2.PdfReader(file)

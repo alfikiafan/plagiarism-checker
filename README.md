@@ -1,82 +1,81 @@
+# Spark - Student Plagiarism Assignment Review Kit
+### A plagiarism checker for comparing source code files and other documents. Mainly used for academic purposes to detect plagiarism in student assignments.
 
-# Pengecek Plagiasi
+Spark is a Python-based desktop application that allows users to compare multiple source code files (or other documents) and calculate the similarity percentage between them. The application also provides suggestions for score deduction if the plagiarism level exceeds a predefined threshold.
 
-Pengecek Plagiasi adalah aplikasi desktop berbasis Python yang memungkinkan pengguna untuk membandingkan beberapa file kode sumber (atau dokumen lain) dan menghitung persentase kesamaan antara file-file tersebut. Aplikasi ini juga memberikan rekomendasi pengurangan nilai jika tingkat plagiarisme melebihi ambang batas yang telah ditentukan.
+## Key Features
 
-## Fitur Utama
-
-- **Dukungan untuk berbagai format file:** Mendukung format `.txt`, `.pdf`, `.docx`, serta berbagai file kode pemrograman seperti `.py`, `.java`, `.cpp`, dan lainnya.
-- **Perhitungan Persentase Kesamaan:** Aplikasi membandingkan teks dari dua atau lebih file dan menghitung persentase kesamaan.
-- **Rekomendasi Pengurangan Nilai:** Jika kesamaan file melebihi ambang batas yang telah ditentukan, aplikasi akan memberikan rekomendasi pengurangan nilai.
-- **Ekspor Hasil:** Hasil pengecekan dapat diekspor ke file Excel (`.xlsx`), menampilkan detail kesamaan antar file dan rekomendasi pengurangan nilai.
-- **Antarmuka Pengguna Modern:** Menggunakan `CustomTkinter` untuk tampilan antarmuka yang modern dan intuitif.
+- **Support for multiple file formats:** Compatible with `.txt`, `.pdf`, `.docx`, as well as various programming code files like `.py`, `.java`, `.cpp`, and more.
+- **Similarity Percentage Calculation:** Compares the text from two or more files and computes the similarity percentage.
+- **Score Deduction Recommendations:** If the file similarity exceeds the predefined threshold, the application suggests score deductions.
+- **Export Results:** You can export the check results into an Excel file (`.xlsx`), which includes detailed similarity comparisons and score deduction recommendations.
+- **Modern User Interface:** Built using `CustomTkinter` to provide a sleek and intuitive user interface.
 
 ## Screenshots
-
 <div style="display: flex; flex-wrap: wrap; justify-content: center;">
   <div>
-    <h3>Halaman Utama Aplikasi</p>
-    <img src="https://github.com/alfikiafan/plagiarism-checker/blob/main/resources/img/main-window.png" alt="Jendela Utama Aplikasi" width="600">
+    <h3>Home</p>
+    <img src="https://github.com/alfikiafan/plagiarism-checker/blob/main/resources/img/main-window.png" alt="Main Window" width="600">
   </div>
   <div>
-    <h3>Hasil Pemeriksaan Plagiarisme</p>
-    <img src="https://github.com/alfikiafan/plagiarism-checker/blob/main/resources/img/results.png" alt="Hasil Pemeriksaan Plagiarisme" width="600">
+    <h3>Plagiarism Check Results with Clusters</p>
+    <img src="https://github.com/alfikiafan/plagiarism-checker/blob/main/resources/img/results.png" alt="Plagiarism Check Results with Clusters" width="600">
   </div>
   <div>
-    <h3>Perbandingan Kedua File</p>
-    <img src="https://github.com/alfikiafan/plagiarism-checker/blob/main/resources/img/comparison.png" alt="Perbandingan File" width="600">
+    <h3>File Comparison</p>
+    <img src="https://github.com/alfikiafan/plagiarism-checker/blob/main/resources/img/comparison.png" alt="File Comparison" width="600">
   </div>
   <div>
-    <h3>Isi File yang Diperiksa</p>
-    <img src="https://github.com/alfikiafan/plagiarism-checker/blob/main/resources/img/file-contents.png" alt="Isi File" width="600">
+    <h3>Check File Contents</p>
+    <img src="https://github.com/alfikiafan/plagiarism-checker/blob/main/resources/img/file-contents.png" alt="Check File Contents" width="600">
   </div>
 </div>
 
-## Persyaratan Sistem
+## System Requirements
 
-Sebelum menjalankan aplikasi ini, pastikan Anda memiliki:
+Ensure you have the following before running the application:
 
 - **Python 3.7+**
-- Modul Python yang dibutuhkan (lihat bagian [Instalasi](#instalasi))
+- Required Python modules (see the [Installation](#installation) section)
 
-## Instalasi
+## Installation
 
-1. Clone repositori ini ke komputer Anda:
+1. Clone this repository to your local machine:
 
    ```bash
    git clone https://github.com/alfikiafan/plagiarism-checker.git
    ```
 
-2. Pindah ke direktori proyek:
+2. Navigate to the project directory:
 
    ```bash
    cd plagiarism-checker
    ```
 
-3. Instal semua dependensi yang diperlukan:
+3. Install all necessary dependencies:
 
    ```bash
    pip install -r requirements.txt
    ```
 
-## Cara Menggunakan
+## How to Use
 
-1. Jalankan aplikasi dengan perintah berikut:
+1. Start the application by running:
 
    ```bash
    python main.py
    ```
 
-2. **Langkah-langkah dalam aplikasi:**
-   - Pilih dua atau lebih file yang ingin Anda bandingkan menggunakan tombol `Browse`.
-   - Masukkan ambang batas persentase kesamaan dan pengurangan nilai maksimal (default 80% dan 20%).
-   - Tentukan lokasi file hasil ekspor dengan tombol `Browse` di bagian output.
-   - Klik tombol `Mulai Pengecekan` untuk memproses file yang dipilih.
-   - Aplikasi akan menampilkan hasil perbandingan dan memberikan rekomendasi pengurangan nilai, serta menyimpan hasil ke file Excel yang telah Anda tentukan.
+2. **Steps within the application:**
+   - Select two or more files to compare by clicking the `Browse` button.
+   - Enter the similarity threshold percentage and the maximum score deduction (default is 80% similarity and 20% deduction).
+   - Choose the output file location using the `Browse` button in the output section.
+   - Click the `Start Check` button to begin the file comparison process.
+   - The application will display the comparison results, suggest score deductions, and save the output to the specified Excel file.
 
-## Struktur Proyek
+## Project Structure
 
-Berikut adalah struktur folder dari proyek ini:
+Here is the folder structure of the project:
 
 ```
 ├── controller/
@@ -92,50 +91,49 @@ Berikut adalah struktur folder dari proyek ini:
 |   ├── results_display.py
 ├── utils/
 │   ├── __init__.py
-│   ├── helpers.py
+│   ├── constants.py
 ├── main.py
 ├── requirements.txt
 └── README.md
 ```
 
-- **`controller/`:** Berisi logika kontrol aplikasi, termasuk pemrosesan file dan koordinasi antara view dan model.
-- **`model/`:** Menangani pembacaan file dan logika pengecekan plagiasi.
-- **`view/`:** Menyediakan antarmuka pengguna berbasis `CustomTkinter`.
-- **`utils/`:** Fungsi tambahan yang digunakan di seluruh aplikasi.
-- **`main.py`:** Titik masuk aplikasi.
+- **`controller/`:** Contains the application's control logic, including file processing and coordination between the view and model.
+- **`model/`:** Handles file reading and plagiarism checking logic.
+- **`view/`:** Provides the user interface, built using `CustomTkinter`.
+- **`utils/`:** Contains helper functions used throughout the application.
+- **`main.py`:** The entry point of the application.
 
-## Dependensi
+## Dependencies
 
-Aplikasi ini bergantung pada beberapa pustaka Python. Berikut adalah daftar pustaka yang diperlukan (disimpan di `requirements.txt`):
+The application relies on several Python libraries. These are listed in `requirements.txt`:
 
-- **customtkinter**: Antarmuka pengguna modern berbasis Tkinter.
-- **python-docx**: Untuk membaca file `.docx`.
-- **PyPDF2**: Untuk membaca file `.pdf`.
-- **pandas**: Untuk manipulasi data dan ekspor hasil ke Excel.
-- **openpyxl**: Untuk menulis file Excel.
+- **customtkinter**: For creating a modern-looking GUI based on Tkinter.
+- **python-docx**: For reading `.docx` files.
+- **PyPDF2**: For reading `.pdf` files.
+- **pandas**: For data manipulation and exporting results to Excel.
+- **openpyxl**: For writing data to Excel files.
 
-## Contoh File Excel Output
+## Example Excel Output
 
-Setelah proses pengecekan plagiasi selesai, file Excel yang dihasilkan akan memiliki dua sheet utama:
+Once the plagiarism check is complete, the generated Excel file will contain two main sheets:
 
-1. **Pengurangan Nilai:** Menampilkan persentase pengurangan nilai berdasarkan kesamaan file.
-2. **Kesamaan:** Menampilkan persentase kesamaan antara dua file yang dibandingkan.
+1. **Score Deduction:** Displays the percentage of score deductions based on file similarity.
+2. **Similarity:** Shows the similarity percentage between the compared files.
 
-## Kontribusi
+## Contribution
 
-Kontribusi sangat disambut! Jika Anda ingin berkontribusi pada proyek ini:
+Contributions are welcome! To contribute to this project:
 
-1. Fork repositori ini.
-2. Buat branch fitur baru (`git checkout -b fitur-baru`).
-3. Commit perubahan Anda (`git commit -m 'Menambahkan fitur baru'`).
-4. Push ke branch (`git push origin fitur-baru`).
-5. Buat Pull Request.
+1. Fork this repository.
+2. Create a new feature branch (`git checkout -b new-feature`).
+3. Commit your changes (`git commit -m 'Add new feature'`).
+4. Push to the branch (`git push origin new-feature`).
+5. Open a Pull Request.
 
-## Lisensi
+## License
 
-Proyek ini dilisensikan di bawah [MIT License](LICENSE).
+This project is licensed under the [MIT License](LICENSE).
 
-## Kontak
+## Contact
 
-Jika Anda memiliki pertanyaan atau saran, jangan ragu untuk menghubungi saya di [email@example.com](mailto:alfiki.diastama@gmail.com).
-```
+For any questions or suggestions, feel free to reach out to me at [alfiki.diastama@gmail.com](mailto:alfiki.diastama@gmail.com).
