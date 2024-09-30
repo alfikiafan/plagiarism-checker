@@ -13,6 +13,24 @@ Pengecek Plagiasi adalah aplikasi desktop berbasis Python yang memungkinkan peng
 
 ## Screenshots
 
+<div style="display: flex; flex-wrap: wrap; justify-content: center;">
+  <div>
+    <h3>Halaman Utama Aplikasi</p>
+    <img src="https://github.com/alfikiafan/plagiarism-checker/blob/main/resources/img/main-window.png" alt="Jendela Utama Aplikasi" width="600">
+  </div>
+  <div>
+    <h3>Hasil Pemeriksaan Plagiarisme</p>
+    <img src="https://github.com/alfikiafan/plagiarism-checker/blob/main/resources/img/results.png" alt="Hasil Pemeriksaan Plagiarisme" width="600">
+  </div>
+  <div>
+    <h3>Perbandingan Kedua File</p>
+    <img src="https://github.com/alfikiafan/plagiarism-checker/blob/main/resources/img/comparison.png" alt="Perbandingan File" width="600">
+  </div>
+  <div>
+    <h3>Isi File yang Diperiksa</p>
+    <img src="https://github.com/alfikiafan/plagiarism-checker/blob/main/resources/img/file-contents.png" alt="Isi File" width="600">
+  </div>
+</div>
 
 ## Persyaratan Sistem
 
