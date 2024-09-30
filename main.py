@@ -1,12 +1,12 @@
 # main.py
 
-from view.app_view import PlagiarismApp
+from view.main_window import MainWindow
 
 def main():
     """
     Fungsi utama untuk menjalankan aplikasi Pengecek Plagiasi.
     """
-    app = PlagiarismApp()
+    app = MainWindow()
     app.mainloop()
 
 if __name__ == "__main__":
