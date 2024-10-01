@@ -17,7 +17,7 @@ class MainWindow(ctk.CTk):
         super().__init__()        
         self.current_language = "en"
         self.localization = Localization(self.current_language)
-        self.languages = {"🌐 English": "en", "🌐 Bahasa Indonesia": "id"}
+        self.languages = {"English": "en", "Bahasa Indonesia": "id"}
         
         self.controller = PlagiarismController(self.localization)
 
@@ -32,9 +32,9 @@ class MainWindow(ctk.CTk):
 
     def setup_ui(self):
         # Create a top frame for both title and language dropdown
-        top_frame = ctk.CTkFrame(self, fg_color="transparent")  # No background color for the frame
-        top_frame.grid_columnconfigure(0, weight=1)  # Allow column 0 (title) to expand
-        top_frame.grid_columnconfigure(1, weight=0)  # Language dropdown column should not expand
+        top_frame = ctk.CTkFrame(self, fg_color="transparent")
+        top_frame.grid_columnconfigure(0, weight=1)
+        top_frame.grid_columnconfigure(1, weight=0)
         top_frame.pack(fill="x", pady=5, padx=10)
 
         # Main label (title) centered in the window
@@ -43,25 +43,28 @@ class MainWindow(ctk.CTk):
             text=self.localization.get("welcome_message"),
             font=ctk.CTkFont(size=18, weight="bold")
         )
-        self.main_label.grid(row=0, column=0, sticky="w")  # Center the title without background
+        self.main_label.grid(row=0, column=0, sticky="w")
 
-        # Create a sub-frame for the language icon and dropdown
+        # Create a sub-frame for the language dropdown with the icon outside
         lang_frame = ctk.CTkFrame(top_frame, fg_color="transparent")
         lang_frame.grid(row=0, column=1, sticky="e", padx=10)
 
-        # Language dropdown without icon inside
-        self.language_var = ctk.StringVar(value="🌐 English")
+        # Only show icon in the main dropdown and increase icon size
+        self.language_var = ctk.StringVar(value="English")
+        self.language_icon = ctk.CTkLabel(lang_frame, text="🌐", font=ctk.CTkFont(size=20))  # Larger icon
+        self.language_icon.pack(side="left", padx=(0, 5))
+
         self.language_dropdown = ctk.CTkOptionMenu(
             lang_frame,
             variable=self.language_var,
-            values=list(self.languages.keys()),
+            values=["English", "Bahasa Indonesia"],
             width=130,
             height=30,
             command=self.change_language
         )
-        self.language_dropdown.pack(side="left", padx=(0, 0))
+        self.language_dropdown.pack(side="left")
 
-        # Frame used for file selection
+        # Frame for file selection
         self.file_selection = FileSelectionFrame(self, self.controller, self)
         self.file_selection.pack(pady=5, padx=10, fill="both", expand=True)
 
@@ -73,7 +76,7 @@ class MainWindow(ctk.CTk):
         )
         self.process_button.pack(pady=10)
 
-        # Frame used for displaying results
+        # Frame for displaying results
         self.result_frame = ResultsFrame(self)
         self.result_frame.pack(fill="x", padx=10, pady=5)
 
@@ -81,17 +84,14 @@ class MainWindow(ctk.CTk):
         """
         Handle language change when the user selects a different language from the dropdown.
         """
-        # Get the language code from the selected language
-        new_language_code = self.languages.get(selected_language)
-
-        # Update the localization object and current language
+        new_language_code = self.languages.get("🌐 " + selected_language, self.current_language)  # Keep icon in the key lookup
         self.current_language = new_language_code
         self.localization = Localization(new_language_code)
         
         # Refresh the UI to reflect the new language
         self.refresh_ui()
 
-        # Update the text of the dropdown to the chosen language
+        # Update the dropdown text (without the icon)
         self.language_dropdown.set(selected_language)
 
     def refresh_ui(self):
