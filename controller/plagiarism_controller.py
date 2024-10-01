@@ -7,10 +7,14 @@ from sklearn.cluster import KMeans
 import os
 
 class PlagiarismController:
-    def __init__(self):
-        self.file_reader = FileReader()
-        self.plagiarism_checker = PlagiarismChecker()
-        self.files_content = {}  # Stores the content of the read files
+    def __init__(self, localization):
+        """
+        PlagiarismController constructor that accepts a localization object for translating messages.
+        """
+        self.localization = localization
+        self.file_reader = FileReader(self.localization)
+        self.plagiarism_checker = PlagiarismChecker(self.localization)
+        self.files_content = {}
 
     def process_files(self, file_paths, threshold, max_reduction):
         """
@@ -36,13 +40,13 @@ class PlagiarismController:
                 content = self.file_reader.read_file(path)
                 self.files_content[path] = content
             except IOError as e:
-                error_files[path] = str(e)
+                error_files[path] = self.localization.get("file_read_error").format(path=path, error=str(e))
 
         # Check if at least two files were successfully read
         if len(self.files_content) < 2:
             if len(error_files) == len(file_paths):
-                raise ValueError("All files failed to be read. No files to compare.")
-            raise ValueError("Make sure at least two files have been successfully read for comparison.")
+                raise ValueError(self.localization.get("all_files_failed"))
+            raise ValueError(self.localization.get("two_files_required"))
 
         # Process plagiarism using PlagiarismChecker
         df_similarity, df_reduction = self.plagiarism_checker.process_plagiarism(
@@ -68,7 +72,7 @@ class PlagiarismController:
         for path, content in self.files_content.items():
             if os.path.basename(path) == filename:
                 return content
-        raise KeyError(f"File {filename} not found.")
+        raise KeyError(self.localization.get("file_not_found").format(filename=filename))
 
     def cluster_files_by_content(self, files_content, n_clusters=5):
         """

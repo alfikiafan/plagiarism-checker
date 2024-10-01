@@ -27,9 +27,10 @@ class ComparisonDisplayWindow(ctk.CTkToplevel):
         self.file1 = file1
         self.file2 = file2
         self.controller = controller
+        self.localization = controller.localization
 
         # Set up the window's properties
-        self.title("File Comparison")  # General title without the file names
+        self.title(self.localization.get("file_comparison_title"))
         self.geometry("900x600")
         self.lift()
 
@@ -50,7 +51,7 @@ class ComparisonDisplayWindow(ctk.CTkToplevel):
         # Title label for file 1
         file1_label = ctk.CTkLabel(
             text1_frame,
-            text=f"File: {os.path.basename(self.file1)}",
+            text=self.localization.get("file_label").format(file_name=os.path.basename(self.file1)),
             font=ctk.CTkFont(size=18, weight="bold")
         )
         file1_label.pack(pady=5)
@@ -72,7 +73,7 @@ class ComparisonDisplayWindow(ctk.CTkToplevel):
         # Title label for file 2
         file2_label = ctk.CTkLabel(
             text2_frame,
-            text=f"File: {os.path.basename(self.file2)}",
+            text=self.localization.get("file_label").format(file_name=os.path.basename(self.file2)),
             font=ctk.CTkFont(size=18, weight="bold")
         )
         file2_label.pack(pady=5)

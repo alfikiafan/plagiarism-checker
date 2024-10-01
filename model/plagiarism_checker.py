@@ -6,6 +6,12 @@ import pandas as pd
 import os
 
 class PlagiarismChecker:
+    def __init__(self, localization):
+        """
+        Constructor for the PlagiarismChecker that accepts a localization object for translating messages.
+        """
+        self.localization = localization
+
     def calculate_similarity(self, text1, text2):
         """
         Calculates the similarity ratio between two texts using difflib.
@@ -53,7 +59,7 @@ class PlagiarismChecker:
                 - df_reduction (pd.DataFrame): DataFrame containing score reduction percentages per file.
         """
         if len(files_content) < 2:
-            raise ValueError("Make sure there are at least two files to compare.")
+            raise ValueError(self.localization.get("two_files_required"))
 
         reduction_dict = {os.path.basename(filename): 0.0 for filename in files_content.keys()}
         similarities = []
@@ -73,25 +79,25 @@ class PlagiarismChecker:
 
         data_reduction = [
             {
-                "File Name": student,
-                "Score Reduction Percentage (%)": round(reduction, 2) if isinstance(reduction, float) else reduction
+                self.localization.get("file_name"): student,
+                self.localization.get("score_reduction_percentage"): round(reduction, 2) if isinstance(reduction, float) else reduction
             }
             for student, reduction in reduction_dict.items()
         ]
 
         df_reduction = pd.DataFrame(data_reduction)
-        df_reduction = df_reduction.sort_values(by="Score Reduction Percentage (%)", ascending=False)
+        df_reduction = df_reduction.sort_values(by=self.localization.get("score_reduction_percentage"), ascending=False)
 
         data_similarity = [
             {
-                "File 1": file1,
-                "File 2": file2,
-                "Similarity (%)": sim
+                self.localization.get("file_1"): file1,
+                self.localization.get("file_2"): file2,
+                self.localization.get("similarity_percent"): sim
             }
             for file1, file2, sim in similarities
         ]
 
         df_similarity = pd.DataFrame(data_similarity)
-        df_similarity = df_similarity.sort_values(by="Similarity (%)", ascending=False)
+        df_similarity = df_similarity.sort_values(by=self.localization.get("similarity_percent"), ascending=False)
 
         return df_similarity, df_reduction

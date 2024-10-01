@@ -22,57 +22,72 @@ class FileSelectionFrame(ctk.CTkFrame):
 
     def setup_ui(self):
         # Frame for input
-        frame = ctk.CTkFrame(self)
-        frame.pack(pady=5, padx=10, fill="both", expand=True)
+        self.frame = ctk.CTkFrame(self)
+        self.frame.pack(pady=5, padx=10, fill="both", expand=True)
 
-        frame.grid_columnconfigure(1, weight=1)
-        frame.grid_columnconfigure(2, weight=0)
+        self.frame.grid_columnconfigure(1, weight=1)
+        self.frame.grid_columnconfigure(2, weight=0)
 
         # File input (2 or more)
-        file_label = ctk.CTkLabel(frame, text="Select Files:")
-        file_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
-        self.file_entry = ctk.CTkEntry(frame, placeholder_text="Path to files")
+        self.file_label = ctk.CTkLabel(self.frame, text=self.main_window.localization.get("select_file"))
+        self.file_label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        self.file_entry = ctk.CTkEntry(self.frame, placeholder_text=self.main_window.localization.get("file_entry_placeholder"))
         self.file_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
-        file_button = ctk.CTkButton(frame, text="Browse", command=self.browse_files)
-        file_button.grid(row=0, column=2, padx=5, pady=5, sticky="e")
+        self.file_button = ctk.CTkButton(self.frame, text=self.main_window.localization.get("browse_button"), command=self.browse_files)
+        self.file_button.grid(row=0, column=2, padx=5, pady=5, sticky="e")
 
         # Threshold for similarity percentage
-        threshold_label = ctk.CTkLabel(frame, text="Similarity Threshold (%)")
-        threshold_label.grid(row=1, column=0, padx=5, pady=5, sticky="w")
-        self.threshold_entry = ctk.CTkEntry(frame, placeholder_text="80")
+        self.threshold_label = ctk.CTkLabel(self.frame, text=self.main_window.localization.get("threshold_label"))
+        self.threshold_label.grid(row=1, column=0, padx=5, pady=5, sticky="w")
+        self.threshold_entry = ctk.CTkEntry(self.frame, placeholder_text=self.main_window.localization.get("threshold_placeholder"))
         self.threshold_entry.grid(row=1, column=1, columnspan=2, padx=5, pady=5, sticky="ew")
 
         # Maximum score deduction
-        max_reduction_label = ctk.CTkLabel(frame, text="Maximum Score Deduction:")
-        max_reduction_label.grid(row=2, column=0, padx=5, pady=5, sticky="w")
-        self.max_reduction_entry = ctk.CTkEntry(frame, placeholder_text="20")
+        self.max_reduction_label = ctk.CTkLabel(self.frame, text=self.main_window.localization.get("max_reduction_label"))
+        self.max_reduction_label.grid(row=2, column=0, padx=5, pady=5, sticky="w")
+        self.max_reduction_entry = ctk.CTkEntry(self.frame, placeholder_text=self.main_window.localization.get("max_reduction_placeholder"))
         self.max_reduction_entry.grid(row=2, column=1, columnspan=2, padx=5, pady=5, sticky="ew")
 
         # Select output location with a browse button
-        output_label = ctk.CTkLabel(frame, text="Select Output Location:")
-        output_label.grid(row=3, column=0, padx=5, pady=5, sticky="w")
-        self.output_entry = ctk.CTkEntry(frame, placeholder_text="Output Location")
+        self.output_label = ctk.CTkLabel(self.frame, text=self.main_window.localization.get("select_output"))
+        self.output_label.grid(row=3, column=0, padx=5, pady=5, sticky="w")
+        self.output_entry = ctk.CTkEntry(self.frame, placeholder_text=self.main_window.localization.get("output_placeholder"))
         self.output_entry.grid(row=3, column=1, padx=5, pady=5, sticky="ew")
-        output_button = ctk.CTkButton(frame, text="Browse", command=self.browse_output_location)
-        output_button.grid(row=3, column=2, padx=5, pady=5, sticky="e")
+        self.output_button = ctk.CTkButton(self.frame, text=self.main_window.localization.get("browse_button"), command=self.browse_output_location)
+        self.output_button.grid(row=3, column=2, padx=5, pady=5, sticky="e")
+
+    def update_ui_text(self, localization):
+        """
+        Update the text of all UI elements when the language changes.
+        """
+        self.file_label.configure(text=localization.get("select_file"))
+        self.file_button.configure(text=localization.get("browse_button"))
+        self.file_entry.configure(placeholder_text=localization.get("file_entry_placeholder"))
+        self.threshold_label.configure(text=localization.get("threshold_label"))
+        self.threshold_entry.configure(placeholder_text=localization.get("threshold_placeholder"))
+        self.max_reduction_label.configure(text=localization.get("max_reduction_label"))
+        self.max_reduction_entry.configure(placeholder_text=localization.get("max_reduction_placeholder"))
+        self.output_label.configure(text=localization.get("select_output"))
+        self.output_entry.configure(placeholder_text=localization.get("output_placeholder"))
+        self.output_button.configure(text=localization.get("browse_button"))
 
     def browse_files(self):
         file_paths = filedialog.askopenfilenames(
-            title="Select 2 or more files", 
-            filetypes=[("Supported files", 
+            title=self.main_window.localization.get("select_files_title"),
+            filetypes=[("Supported files",
                         "*.txt;*.docx;*.pdf;*.py;*.java;*.c;*.cpp;*.h;*.hpp;*.cs;*.js;*.html;*.css;*.php;*.sql;*.rb;*.pl;*.sh;*.swift;*.kt;*.go;*.rs;*.lua;*.r;*.m;*.json;*.xml;*.yaml;*.yml;*.ini;*.cfg;*.conf;*.md;*.rst;*.csv;*.tsv;*.xls;*.xlsx;*.ppt;*.pptx;*.odt;*.ods;*.odp")]
         )
         if len(file_paths) < 2:
-            self.main_window.update_result("Please make sure to select at least two files.")
+            self.main_window.update_result(self.main_window.localization.get("error_select_two_files"))
             return
         self.file_entry.delete(0, 'end')
         self.file_entry.insert(0, ', '.join(file_paths))
 
     def browse_output_location(self):
         output_path = filedialog.asksaveasfilename(
-            defaultextension=".xlsx", 
-            filetypes=[("Excel files", "*.xlsx")], 
-            title="Select output location and file name"
+            defaultextension=".xlsx",
+            filetypes=[("Excel files", "*.xlsx")],
+            title=self.main_window.localization.get("select_output_title")
         )
         if output_path:
             self.output_entry.delete(0, 'end')
@@ -100,7 +115,7 @@ class FileSelectionFrame(ctk.CTkFrame):
                     try:
                         threshold = float(threshold_value)
                     except ValueError:
-                        self.main_window.update_result("Threshold must be a number.")
+                        self.main_window.update_result(self.main_window.localization.get("error_threshold_number"))
                         return
 
                 if not reduction_value:
@@ -109,15 +124,15 @@ class FileSelectionFrame(ctk.CTkFrame):
                     try:
                         max_reduction = float(reduction_value)
                     except ValueError:
-                        self.main_window.update_result("Maximum reduction must be a number.")
+                        self.main_window.update_result(self.main_window.localization.get("error_max_reduction_number"))
                         return
 
                 if not files or len(files) < 2:
-                    self.main_window.update_result("Please select at least two files to check.")
+                    self.main_window.update_result(self.main_window.localization.get("error_select_two_files"))
                     return
 
                 if not output_file:
-                    self.main_window.update_result("Please select a location to save the results.")
+                    self.main_window.update_result(self.main_window.localization.get("error_select_output"))
                     return
 
                 # Plagiarism and clustering process
@@ -125,9 +140,9 @@ class FileSelectionFrame(ctk.CTkFrame):
 
                 if error_files:
                     error_messages = "\n".join([f"{os.path.basename(k)}: {v}" for k, v in error_files.items()])
-                    self.main_window.update_result(f"Some files failed to be read:\n{error_messages}")
+                    self.main_window.update_result(f"{self.main_window.localization.get('error_reading_files')}:\n{error_messages}")
                 else:
-                    self.main_window.update_result(f"Output successfully saved to {output_file}")
+                    self.main_window.update_result(f"{self.main_window.localization.get('output_saved_successfully')} {output_file}")
 
                 # Step 1: Read file content
                 files_content = self.controller.files_content
@@ -140,7 +155,7 @@ class FileSelectionFrame(ctk.CTkFrame):
 
                 # Display results in a new window
                 self.main_window.result_frame.show_output_window(df_similarity, df_reduction, output_file, file_cluster_mapping)
-                    
+
             except Exception as e:
                 self.main_window.update_result(str(e))
             finally:

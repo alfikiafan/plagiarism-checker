@@ -1,5 +1,3 @@
-# /model/file_reader.py
-
 import os
 from docx import Document
 from utils.constants import PROGRAMMING_EXTENSIONS
@@ -7,6 +5,15 @@ import PyPDF2
 
 class FileReader:
     programming_extensions = PROGRAMMING_EXTENSIONS
+
+    def __init__(self, localization):
+        """
+        Initializes the FileReader with a localization object for error messages.
+
+        Args:
+            localization (object): Localization object to fetch localized messages.
+        """
+        self.localization = localization
 
     def read_file(self, filepath):
         """
@@ -30,7 +37,7 @@ class FileReader:
             else:
                 return self.read_text(filepath)
         except Exception as e:
-            raise IOError(f"Error reading file {filepath}: {e}")
+            raise IOError(self.localization.get("file_read_error").format(filepath=filepath, error=str(e)))
 
     def read_text(self, filepath):
         """

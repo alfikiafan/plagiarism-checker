@@ -4,7 +4,7 @@ from view.main_window import MainWindow
 
 def main():
     """
-    Fungsi utama untuk menjalankan aplikasi Pengecek Plagiasi.
+    Main function to run the application
     """
     app = MainWindow()
     app.mainloop()

@@ -7,7 +7,7 @@ import os
 class FileContentDisplayWindow(ctk.CTkToplevel):
     """
     A window to display the content of a selected file in a read-only text view.
-    
+
     This class is responsible for creating a pop-up window that displays the content
     of a file and configures the display based on the file type, adjusting font
     settings accordingly.
@@ -17,6 +17,7 @@ class FileContentDisplayWindow(ctk.CTkToplevel):
         file_name (str): The name of the file to display.
         content (str): The actual content of the file.
         controller (PlagiarismController): The controller instance for accessing settings and configurations.
+        localization (object): Localization object for dynamic language switching.
     """
     def __init__(self, parent, file_name, content, controller):
         """
@@ -33,9 +34,10 @@ class FileContentDisplayWindow(ctk.CTkToplevel):
         self.file_name = file_name
         self.content = content
         self.controller = controller
+        self.localization = controller.localization  # Use the localization object from the controller
 
         # Window properties
-        self.title(f"File Content: {self.file_name}")
+        self.title(self.localization.get("file_content_title").format(file_name=self.file_name))
         self.geometry("900x600")
 
         self.setup_ui()
@@ -48,7 +50,7 @@ class FileContentDisplayWindow(ctk.CTkToplevel):
         # Title label displaying the file name
         title_label = ctk.CTkLabel(
             self,
-            text=f"File Content: {self.file_name}",
+            text=self.localization.get("file_content_title").format(file_name=self.file_name),
             font=ctk.CTkFont(size=18, weight="bold")
         )
         title_label.pack(pady=10)
@@ -87,7 +89,7 @@ class FileContentDisplayWindow(ctk.CTkToplevel):
         """
         # Get the file extension
         ext = os.path.splitext(filepath)[1].lower()
-        
+
         # If the file is a programming file, use a monospace font like Consolas
         if ext in self.controller.file_reader.programming_extensions:
             widget.configure(font=("Consolas", 12))

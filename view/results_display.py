@@ -22,6 +22,12 @@ class ResultsFrame(ctk.CTkFrame):
     def update_result(self, message):
         self.result_label.configure(text=message)
 
+    def update_ui_text(self, localization):
+        """
+        Update the text of all UI elements when the language changes.
+        """
+        pass
+
     def show_output_window(self, df_similarity, df_reduction, output_file, file_cluster_mapping):
         # Save results to Excel
         try:
@@ -29,7 +35,7 @@ class ResultsFrame(ctk.CTkFrame):
                 df_reduction.to_excel(writer, sheet_name='Score Deduction', index=False)
                 df_similarity.to_excel(writer, sheet_name='Similarity', index=False)
         except Exception as e:
-            self.update_result(f"Error saving Excel file: {e}")
+            self.update_result(f"{self.parent.localization.get('error_saving_file')} {e}")
             return
 
         # Add "Cluster" column to df_reduction
@@ -37,21 +43,21 @@ class ResultsFrame(ctk.CTkFrame):
 
         # Create a new window to display the results
         output_window = ctk.CTkToplevel(self)
-        output_window.title("Plagiarism Check Results")
+        output_window.title(self.parent.localization.get("results_window_title"))
         output_window.geometry("800x600")
 
         # Table 1: Similarity Percentage (without the Cluster column)
-        similarity_label = ctk.CTkLabel(output_window, text="Similarity Percentage", font=ctk.CTkFont(size=18, weight="bold"))
+        similarity_label = ctk.CTkLabel(output_window, text=self.parent.localization.get("similarity_percentage"), font=ctk.CTkFont(size=18, weight="bold"))
         similarity_label.pack(pady=5)
 
         # Search box for the Similarity Percentage table
         search_frame_similarity = ctk.CTkFrame(output_window)
         search_frame_similarity.pack(pady=5, padx=10, fill="x")
 
-        search_label_similarity = ctk.CTkLabel(search_frame_similarity, text="Search:", font=ctk.CTkFont(size=14))
+        search_label_similarity = ctk.CTkLabel(search_frame_similarity, text=self.parent.localization.get("search_label"), font=ctk.CTkFont(size=14))
         search_label_similarity.pack(side="left", padx=5)
 
-        search_entry_similarity = ctk.CTkEntry(search_frame_similarity, placeholder_text="Enter search keyword...")
+        search_entry_similarity = ctk.CTkEntry(search_frame_similarity, placeholder_text=self.parent.localization.get("search_placeholder"))
         search_entry_similarity.pack(side="left", fill="x", expand=True, padx=5)
 
         similarity_frame = ctk.CTkFrame(output_window)
@@ -60,9 +66,18 @@ class ResultsFrame(ctk.CTkFrame):
         similarity_scroll = ctk.CTkScrollbar(similarity_frame, orientation='vertical')
         similarity_scroll.pack(side="right", fill="y")
 
-        similarity_columns = ["File 1", "File 2", "Similarity (%)"]
+        similarity_columns = [
+            self.parent.localization.get("file_1"),
+            self.parent.localization.get("file_2"),
+            self.parent.localization.get("similarity_percent")
+        ]
         similarity_table = ttk.Treeview(similarity_frame, columns=similarity_columns, show='headings', height=8, yscrollcommand=similarity_scroll.set)
 
+        column_mapping = {
+            self.parent.localization.get("file_1"): "File 1",
+            self.parent.localization.get("file_2"): "File 2",
+            self.parent.localization.get("similarity_percent"): "Similarity (%)"
+        }
         sort_states_similarity = {col: True for col in similarity_columns}
 
         style = ttk.Style()
@@ -94,8 +109,9 @@ class ResultsFrame(ctk.CTkFrame):
 
         # Function to sort and populate table by a specific column
         def sort_similarity_table(col):
+            internal_col = column_mapping[col]
             ascending = sort_states_similarity[col]
-            sorted_data = df_similarity.sort_values(by=[col], ascending=ascending)
+            sorted_data = df_similarity.sort_values(by=[internal_col], ascending=ascending)
             populate_similarity_table(sorted_data)
             
             for column in similarity_columns:
@@ -106,10 +122,10 @@ class ResultsFrame(ctk.CTkFrame):
                 else:
                     similarity_table.heading(column, text=column)
 
-                    sort_states_similarity[col] = not ascending
+            sort_states_similarity[col] = not ascending
 
         for col in similarity_columns:
-            if col == "File 1" or col == "File 2":
+            if col == self.parent.localization.get("file_1") or col == self.parent.localization.get("file_2"):
                 similarity_table.heading(col, text=col, command=lambda _col=col: sort_similarity_table(_col))
                 similarity_table.column(col, anchor='w', width=150)
             else:
@@ -136,17 +152,17 @@ class ResultsFrame(ctk.CTkFrame):
         similarity_table.pack(fill="both", expand=True)
 
         # Table 2: Score Deduction (with Cluster column)
-        reduction_label = ctk.CTkLabel(output_window, text="Score Deduction", font=ctk.CTkFont(size=18, weight="bold"))
+        reduction_label = ctk.CTkLabel(output_window, text=self.parent.localization.get("score_deduction"), font=ctk.CTkFont(size=18, weight="bold"))
         reduction_label.pack(pady=5)
 
         # Search box for the Score Deduction table
         search_frame_reduction = ctk.CTkFrame(output_window)
         search_frame_reduction.pack(pady=5, padx=10, fill="x")
 
-        search_label_reduction = ctk.CTkLabel(search_frame_reduction, text="Search:", font=ctk.CTkFont(size=14))
+        search_label_reduction = ctk.CTkLabel(search_frame_reduction, text=self.parent.localization.get("search_label"), font=ctk.CTkFont(size=14))
         search_label_reduction.pack(side="left", padx=5)
 
-        search_entry_reduction = ctk.CTkEntry(search_frame_reduction, placeholder_text="Enter search keyword...")
+        search_entry_reduction = ctk.CTkEntry(search_frame_reduction, placeholder_text=self.parent.localization.get("search_placeholder"))
         search_entry_reduction.pack(side="left", fill="x", expand=True, padx=5)
 
         reduction_frame = ctk.CTkFrame(output_window)
@@ -155,7 +171,18 @@ class ResultsFrame(ctk.CTkFrame):
         reduction_scroll = ctk.CTkScrollbar(reduction_frame, orientation='vertical')
         reduction_scroll.pack(side="right", fill="y")
 
-        reduction_columns = [str(col) for col in df_reduction.columns]
+        reduction_columns = [
+            self.parent.localization.get("file_name"),
+            self.parent.localization.get("score_reduction_percentage"),
+            self.parent.localization.get("cluster")
+        ]
+
+        reduction_column_mapping = {
+            self.parent.localization.get("file_name"): "File Name",
+            self.parent.localization.get("score_reduction_percentage"): "Score Reduction Percentage (%)",
+            self.parent.localization.get("cluster"): "Cluster"
+        }
+
         reduction_table = ttk.Treeview(reduction_frame, columns=reduction_columns, show='headings', height=8, yscrollcommand=reduction_scroll.set)
 
         reduction_scroll.configure(command=reduction_table.yview)
@@ -164,7 +191,7 @@ class ResultsFrame(ctk.CTkFrame):
 
         for col in reduction_columns:
             reduction_table.heading(col, text=col, command=lambda _col=col: sort_reduction_table(_col))
-            reduction_table.column(col, anchor='w' if col == "File Name" else 'center', width=150)
+            reduction_table.column(col, anchor='w' if col == self.parent.localization.get("file_name") else 'center', width=150)
 
         # Function to populate the reduction table with data
         def populate_reduction_table(data):
@@ -174,8 +201,9 @@ class ResultsFrame(ctk.CTkFrame):
 
         # Function to sort and populate reduction table by a specific column
         def sort_reduction_table(col):
+            internal_col = reduction_column_mapping[col]
             ascending = sort_states_reduction[col]
-            sorted_data = df_reduction.sort_values(by=[col], ascending=ascending)
+            sorted_data = df_reduction.sort_values(by=[internal_col], ascending=ascending)
             populate_reduction_table(sorted_data)
 
             for column in reduction_columns:
@@ -235,7 +263,7 @@ class ResultsFrame(ctk.CTkFrame):
         try:
             content = self.parent.controller.get_file_content(file_name)
         except Exception as e:
-            self.update_result(f"Error retrieving file content: {e}")
+            self.update_result(f"{self.parent.localization.get('error_retrieving_file_content')}: {e}")
             return
 
         # Create a window to display the file content
