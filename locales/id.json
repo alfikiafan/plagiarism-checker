@@ -35,7 +35,7 @@
     "file_not_found": "Berkas {filename} tidak ditemukan.",
     "file_name": "Nama Berkas",
     "score_reduction_percentage": "Persentase Pengurangan Skor (%)",
-    "file_content_title": "Isi Berkas: {file_name}",
+    "file_content_title": "{file_name}",
     "file_comparison_title": "Perbandingan Berkas",
     "file_label": "Berkas: {file_name}",
     "cluster": "Kluster"

@@ -35,7 +35,7 @@
     "file_not_found": "File {filename} not found.",
     "file_name": "File Name",
     "score_reduction_percentage": "Score Reduction Percentage (%)",
-    "file_content_title": "File Content: {file_name}",
+    "file_content_title": "{file_name}",
     "file_comparison_title": "File Comparison",
     "file_label": "File: {file_name}",
     "cluster": "Cluster"
