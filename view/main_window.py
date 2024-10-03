@@ -5,7 +5,6 @@ from controller.plagiarism_controller import PlagiarismController
 from view.file_selection import FileSelectionFrame
 from view.results_display import ResultsFrame
 from utils.localization import Localization
-from PIL import Image
 
 class MainWindow(ctk.CTk):
     """
