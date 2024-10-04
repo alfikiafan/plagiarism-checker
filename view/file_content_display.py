@@ -46,6 +46,13 @@ class FileContentDisplayWindow(ctk.CTkToplevel):
         """
         Sets up the user interface for displaying file content, including a title,
         text view, and scrollbars for navigation.
+
+        Args:
+            file_name (str): The name of the file to display.
+            content (str): The content of the file to display.
+
+        Raises:
+            Exception: If an error occurs while setting up the UI components.
         """
         # Title label displaying the file name
         title_label = ctk.CTkLabel(

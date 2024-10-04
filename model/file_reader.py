@@ -1,9 +1,14 @@
+# model/file_reader.py
+
 import os
 from docx import Document
 from utils.constants import PROGRAMMING_EXTENSIONS
 import PyPDF2
 
 class FileReader:
+    """
+    FileReader is responsible for reading files with different extensions and returning their content as a string.
+    """
     programming_extensions = PROGRAMMING_EXTENSIONS
 
     def __init__(self, localization):

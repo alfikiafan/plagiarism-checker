@@ -14,6 +14,14 @@ class FileSelectionFrame(ctk.CTkFrame):
     contains the logic for starting the plagiarism check process.
     """
     def __init__(self, parent, controller, main_window):
+        """
+        Initializes the FileSelectionFrame with the parent window, controller, and main window.
+        
+        Args:
+            parent (ctk.CTk): The parent window or frame.
+            controller (PlagiarismController): The controller for handling the plagiarism checking process.
+            main_window (MainWindow): The main window instance for updating results and displaying output.
+        """
         super().__init__(parent)
         self.controller = controller
         self.main_window = main_window
@@ -21,7 +29,10 @@ class FileSelectionFrame(ctk.CTkFrame):
         self.setup_ui()
 
     def setup_ui(self):
-        # Frame for input
+        """
+        Sets up the user interface for the file selection frame, including labels,
+        entry fields, and buttons for selecting files and setting parameters.
+        """
         self.frame = ctk.CTkFrame(self)
         self.frame.pack(pady=5, padx=10, fill="both", expand=True)
 
@@ -59,6 +70,9 @@ class FileSelectionFrame(ctk.CTkFrame):
     def update_ui_text(self, localization):
         """
         Update the text of all UI elements when the language changes.
+
+        Args:
+            localization (dict): The localization dictionary for the selected language
         """
         self.file_label.configure(text=localization.get("select_file"))
         self.file_button.configure(text=localization.get("browse_button"))
@@ -72,6 +86,10 @@ class FileSelectionFrame(ctk.CTkFrame):
         self.output_button.configure(text=localization.get("browse_button"))
 
     def browse_files(self):
+        """
+        Opens a file dialog to select multiple files for plagiarism
+        checking. The selected file paths are displayed in the entry field.
+        """
         file_paths = filedialog.askopenfilenames(
             title=self.main_window.localization.get("select_files_title"),
             filetypes=[("Supported files",
@@ -84,6 +102,10 @@ class FileSelectionFrame(ctk.CTkFrame):
         self.file_entry.insert(0, ', '.join(file_paths))
 
     def browse_output_location(self):
+        """
+        Opens a file dialog to select the output location for saving the
+        plagiarism check results. The selected path is displayed in the entry field.
+        """
         output_path = filedialog.asksaveasfilename(
             defaultextension=".xlsx",
             filetypes=[("Excel files", "*.xlsx")],
@@ -94,12 +116,13 @@ class FileSelectionFrame(ctk.CTkFrame):
             self.output_entry.insert(0, output_path)
 
     def start_process(self):
-        # Change the cursor to "watch" (or "wait") and immediately update the display
+        """
+        Starts the plagiarism checking process with the selected files and parameters.
+        """
         self.main_window.config(cursor="watch")
         self.main_window.update()
         self.disable_widgets()
 
-        # Function to run the plagiarism check process
         def run_plagiarism_check():
             try:
                 time.sleep(0.1)
@@ -109,51 +132,16 @@ class FileSelectionFrame(ctk.CTkFrame):
                 threshold_value = self.threshold_entry.get()
                 reduction_value = self.max_reduction_entry.get()
 
-                if not threshold_value:
-                    threshold = THRESHOLD_DEFAULT
-                else:
-                    try:
-                        threshold = float(threshold_value)
-                    except ValueError:
-                        self.main_window.update_result(self.main_window.localization.get("error_threshold_number"))
-                        return
+                # Panggil controller untuk memproses logika plagiarisme
+                result, error = self.controller.run_plagiarism_process(files, threshold_value, reduction_value, output_file)
 
-                if not reduction_value:
-                    max_reduction = MAX_REDUCTION_DEFAULT
-                else:
-                    try:
-                        max_reduction = float(reduction_value)
-                    except ValueError:
-                        self.main_window.update_result(self.main_window.localization.get("error_max_reduction_number"))
-                        return
-
-                if not files or len(files) < 2:
-                    self.main_window.update_result(self.main_window.localization.get("error_select_two_files"))
+                if error:
+                    self.main_window.update_result(self.main_window.localization.get(error))
                     return
 
-                if not output_file:
-                    self.main_window.update_result(self.main_window.localization.get("error_select_output"))
-                    return
+                df_similarity, df_reduction, file_cluster_mapping = result
+                self.main_window.update_result(f"{self.main_window.localization.get('output_saved_successfully')} {output_file}")
 
-                # Plagiarism and clustering process
-                df_similarity, df_reduction, error_files = self.controller.process_files(files, threshold, max_reduction)
-
-                if error_files:
-                    error_messages = "\n".join([f"{os.path.basename(k)}: {v}" for k, v in error_files.items()])
-                    self.main_window.update_result(f"{self.main_window.localization.get('error_reading_files')}:\n{error_messages}")
-                else:
-                    self.main_window.update_result(f"{self.main_window.localization.get('output_saved_successfully')} {output_file}")
-
-                # Step 1: Read file content
-                files_content = self.controller.files_content
-
-                # Step 2: Cluster files based on file content
-                file_cluster_mapping = self.controller.cluster_files_by_content(files_content)
-
-                # Step 3: Add 'Cluster' column to df_similarity based on 'File 1'
-                df_similarity['Cluster'] = df_similarity['File 1'].apply(lambda x: file_cluster_mapping.get(os.path.basename(x), 'N/A'))
-
-                # Display results in a new window
                 self.main_window.result_frame.show_output_window(df_similarity, df_reduction, output_file, file_cluster_mapping)
 
             except Exception as e:
@@ -163,7 +151,7 @@ class FileSelectionFrame(ctk.CTkFrame):
                 self.main_window.update()
                 self.enable_widgets()
 
-        # Run the process in a separate thread to avoid blocking the GUI
+        # Jalankan proses di thread terpisah
         process_thread = threading.Thread(target=run_plagiarism_check)
         process_thread.start()
 

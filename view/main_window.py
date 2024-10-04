@@ -13,6 +13,9 @@ class MainWindow(ctk.CTk):
     results frame, and the start button.
     """
     def __init__(self):
+        """
+        Initializes the main window of the application with the necessary components.
+        """
         super().__init__()        
         self.current_language = "en"
         self.localization = Localization(self.current_language)
@@ -30,10 +33,13 @@ class MainWindow(ctk.CTk):
         self.setup_ui()
 
     def setup_ui(self):
-        # Create a top frame for both title and language dropdown
-        top_frame = ctk.CTkFrame(self, fg_color="transparent")  # No background color for the frame
-        top_frame.grid_columnconfigure(0, weight=1)  # Allow column 0 (title) to expand
-        top_frame.grid_columnconfigure(1, weight=0)  # Language dropdown column should not expand
+        """
+        Sets up the user interface for the main window, including the file selection frame,
+        results frame, and start button.
+        """
+        top_frame = ctk.CTkFrame(self, fg_color="transparent")
+        top_frame.grid_columnconfigure(0, weight=1)
+        top_frame.grid_columnconfigure(1, weight=0)
         top_frame.pack(fill="x", pady=5, padx=10)
 
         # Main label (title) centered in the window
@@ -42,7 +48,7 @@ class MainWindow(ctk.CTk):
             text=self.localization.get("welcome_message"),
             font=ctk.CTkFont(size=18, weight="bold")
         )
-        self.main_label.grid(row=0, column=0, sticky="w")  # Center the title without background
+        self.main_label.grid(row=0, column=0, sticky="w")
 
         # Create a sub-frame for the language icon and dropdown
         lang_frame = ctk.CTkFrame(top_frame, fg_color="transparent")
@@ -79,6 +85,9 @@ class MainWindow(ctk.CTk):
     def change_language(self, selected_language):
         """
         Handle language change when the user selects a different language from the dropdown.
+
+        Args:
+            selected_language (str): The selected language from the dropdown.
         """
         # Get the language code from the selected language
         new_language_code = self.languages.get(selected_language)
@@ -106,13 +115,15 @@ class MainWindow(ctk.CTk):
         # Update Start button text
         self.process_button.configure(text=self.localization.get("start_button"))
 
-        # Refresh the UI elements in the FileSelectionFrame and ResultsFrame
+        # Refresh the UI elements in the FileSelectionFrame
         self.file_selection.update_ui_text(self.localization)
-        self.result_frame.update_ui_text(self.localization)
 
     def update_result(self, message):
         """
         Update the result frame with a given message.
+
+        Args:
+            message (str): The message to display in the result frame.
         """
         self.result_frame.update_result(message)
 

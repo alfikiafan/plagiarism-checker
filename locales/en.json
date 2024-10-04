@@ -37,6 +37,6 @@
     "score_reduction_percentage": "Score Reduction Percentage (%)",
     "file_content_title": "{file_name}",
     "file_comparison_title": "File Comparison",
-    "file_label": "File: {file_name}",
+    "file_label": "{file_name}",
     "cluster": "Cluster"
 }

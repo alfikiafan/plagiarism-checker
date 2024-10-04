@@ -37,6 +37,6 @@
     "score_reduction_percentage": "Persentase Pengurangan Skor (%)",
     "file_content_title": "{file_name}",
     "file_comparison_title": "Perbandingan Berkas",
-    "file_label": "Berkas: {file_name}",
+    "file_label": "{file_name}",
     "cluster": "Kluster"
 }

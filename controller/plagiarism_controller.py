@@ -1,15 +1,23 @@
 # /controller/plagiarism_controller.py
 
+import pandas as pd
 from model.file_reader import FileReader
 from model.plagiarism_checker import PlagiarismChecker
 from sklearn.feature_extraction.text import TfidfVectorizer
+from utils.constants import THRESHOLD_DEFAULT, MAX_REDUCTION_DEFAULT
 from sklearn.cluster import KMeans
 import os
 
 class PlagiarismController:
+    """
+    PlagiarismController is responsible for handling the plagiarism checking process.
+    """
     def __init__(self, localization):
         """
         PlagiarismController constructor that accepts a localization object for translating messages.
+
+        Args:
+            localization (object): Localization object for fetching localized messages.
         """
         self.localization = localization
         self.file_reader = FileReader(self.localization)
@@ -105,3 +113,71 @@ class PlagiarismController:
         file_cluster_mapping = {os.path.basename(file_paths[i]): kmeans.labels_[i] for i in range(len(file_paths))}
 
         return file_cluster_mapping
+    
+    def run_plagiarism_process(self, files, threshold_value, reduction_value, output_file):
+        """
+        Runs the plagiarism checking process with the selected files.
+
+        Args:
+            files (list): List of file paths to be processed.
+            threshold_value (str): Threshold value for similarity percentage.
+            reduction_value (str): Maximum reduction value for score.
+            output_file (str): Path to the output file.
+
+        Returns:
+            tuple: (result, error)
+                - result (tuple): Tuple containing the DataFrames and file-cluster mapping.
+                - error (str): Error message if an error occurred.
+        """
+        try:
+            threshold = float(threshold_value) if threshold_value else THRESHOLD_DEFAULT
+        except ValueError:
+            return None, "error_threshold_number"
+        
+        try:
+            max_reduction = float(reduction_value) if reduction_value else MAX_REDUCTION_DEFAULT
+        except ValueError:
+            return None, "error_max_reduction_number"
+
+        if not files or len(files) < 2:
+            return None, "error_select_two_files"
+        
+        if not output_file:
+            return None, "error_select_output"
+
+        # Plagiarism and clustering process
+        df_similarity, df_reduction, error_files = self.process_files(files, threshold, max_reduction)
+
+        if error_files:
+            error_messages = "\n".join([f"{os.path.basename(k)}: {v}" for k, v in error_files.items()])
+            return None, f"{self.localization.get('error_reading_files')}:\n{error_messages}"
+
+        files_content = self.files_content
+        file_cluster_mapping = self.cluster_files_by_content(files_content)
+
+        df_similarity['Cluster'] = df_similarity['File 1'].apply(lambda x: file_cluster_mapping.get(os.path.basename(x), 'N/A'))
+
+        return (df_similarity, df_reduction, file_cluster_mapping), None
+    
+    def save_results_to_excel(self, df_similarity, df_reduction, output_file, file_cluster_mapping):
+        """
+        Saves the plagiarism checking results to an Excel file.
+
+        Args:
+            df_similarity (pd.DataFrame): DataFrame containing similarity percentages between files.
+            df_reduction (pd.DataFrame): DataFrame containing score reduction percentages per file.
+            output_file (str): Path to the output Excel file.
+            file_cluster_mapping (dict): Mapping of the file basename to the cluster number.
+
+        Returns:
+            str: Error message if an error occurred, otherwise None.
+        """
+        try:
+            with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
+                df_reduction.to_excel(writer, sheet_name='Score Deduction', index=False)
+                df_similarity.to_excel(writer, sheet_name='Similarity', index=False)
+                df_cluster_mapping = pd.DataFrame(list(file_cluster_mapping.items()), columns=['File Name', 'Cluster'])
+                df_cluster_mapping.to_excel(writer, sheet_name='Cluster Mapping', index=False)
+            return None
+        except Exception as e:
+            return str(e)

@@ -39,6 +39,13 @@ class ComparisonDisplayWindow(ctk.CTkToplevel):
     def setup_ui(self):
         """
         Sets up the user interface for displaying the content of two files side by side.
+        The content of the files is displayed in two text widgets with synchronized scrolling.
+        Similar sections between the two files are highlighted for easy comparison.
+        The font of the text widgets is set to monospace for programming files and Open Sans for others.
+
+        Args:
+            file1 (str): Full path to the first file.
+            file2 (str): Full path to the second file.
         """
         # Frame to hold the content of both files
         text_frame = ctk.CTkFrame(self)

@@ -9,33 +9,53 @@ from view.comparison_display import ComparisonDisplayWindow
 from view.file_content_display import FileContentDisplayWindow
 
 class ResultsFrame(ctk.CTkFrame):
+    """
+    ResultsFrame is a frame that displays the results of the plagiarism check,
+    including the similarity percentage and score deduction for each file pair.
+    """
     def __init__(self, parent):
+        """
+        Initializes the ResultsFrame with the parent window.
+
+        Args:
+            parent (ctk.CTk): The parent window or frame.
+        """
         super().__init__(parent, fg_color="#2B2B2B")
-        self.parent = parent  # Reference to MainWindow
+        self.parent = parent
         self.setup_ui()
 
     def setup_ui(self):
-        # Result description box
+        """
+        Sets up the user interface for the results frame, including labels and a text area
+        to display the results of the plagiarism check.
+        """
         self.result_label = ctk.CTkLabel(self, text="", wraplength=500)
         self.result_label.pack(padx=5, pady=5)
 
     def update_result(self, message):
+        """
+        Updates the result label with the given message.
+
+        Args:
+            message (str): The message to display in the result label.
+        """
         self.result_label.configure(text=message)
 
-    def update_ui_text(self, localization):
-        """
-        Update the text of all UI elements when the language changes.
-        """
-        pass
-
     def show_output_window(self, df_similarity, df_reduction, output_file, file_cluster_mapping):
-        # Save results to Excel
-        try:
-            with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
-                df_reduction.to_excel(writer, sheet_name='Score Deduction', index=False)
-                df_similarity.to_excel(writer, sheet_name='Similarity', index=False)
-        except Exception as e:
-            self.update_result(f"{self.parent.localization.get('error_saving_file')} {e}")
+        """
+        Displays the results of the plagiarism check in a new window, including the similarity
+        percentage and score deduction for each file pair. The results are displayed in two tables.
+        
+        Args:
+            df_similarity (pd.DataFrame): DataFrame containing the similarity percentage between file pairs.
+            df_reduction (pd.DataFrame): DataFrame containing the score deduction for each file.
+            output_file (str): The path to the output Excel file containing the results.
+            file_cluster_mapping (dict): A dictionary mapping file names to cluster labels.
+        """
+        error = self.parent.controller.save_results_to_excel(df_similarity, df_reduction, output_file, file_cluster_mapping)
+
+        if error:
+            self.update_result(f"{self.parent.localization.get('error_saving_file')} {error}")
             return
 
         # Add "Cluster" column to df_reduction
@@ -101,14 +121,24 @@ class ResultsFrame(ctk.CTkFrame):
 
         similarity_scroll.configure(command=similarity_table.yview)
 
-        # Function to populate the similarity table with data
         def populate_similarity_table(data):
+            """
+            Populate the similarity table with data from the DataFrame.
+
+            Args:
+                data (pd.DataFrame): The DataFrame containing the similarity data
+            """
             similarity_table.delete(*similarity_table.get_children())  # Clear existing data
             for index, row in data.iterrows():
                 similarity_table.insert('', 'end', values=list(row))
 
-        # Function to sort and populate table by a specific column
         def sort_similarity_table(col):
+            """
+            Sort the similarity table by a specific column and populate the table with the sorted data.
+            
+            Args:
+                col (str): The column to sort by.
+            """
             internal_col = column_mapping[col]
             ascending = sort_states_similarity[col]
             sorted_data = df_similarity.sort_values(by=[internal_col], ascending=ascending)
@@ -135,8 +165,13 @@ class ResultsFrame(ctk.CTkFrame):
         # Populate the table with the full data initially
         populate_similarity_table(df_similarity)
 
-        # Function to filter data based on search query in similarity table
         def search_similarity_table(*args):
+            """
+            Filter the similarity table based on the search query in the search entry.
+            
+            Args:
+                *args: Additional arguments passed to the function.
+            """
             query = search_entry_similarity.get().lower()
             if query == "":  # If the search box is empty, show all data
                 populate_similarity_table(df_similarity)
@@ -193,14 +228,24 @@ class ResultsFrame(ctk.CTkFrame):
             reduction_table.heading(col, text=col, command=lambda _col=col: sort_reduction_table(_col))
             reduction_table.column(col, anchor='w' if col == self.parent.localization.get("file_name") else 'center', width=150)
 
-        # Function to populate the reduction table with data
         def populate_reduction_table(data):
+            """
+            Populate the score deduction table with data from the DataFrame.
+
+            Args:
+                data (pd.DataFrame): The DataFrame containing the score deduction data
+            """
             reduction_table.delete(*reduction_table.get_children())
             for index, row in data.iterrows():
                 reduction_table.insert('', 'end', values=list(row))
 
-        # Function to sort and populate reduction table by a specific column
         def sort_reduction_table(col):
+            """
+            Sort the score deduction table by a specific column and populate the table with the sorted data.
+
+            Args:
+                col (str): The column to sort by.
+            """
             internal_col = reduction_column_mapping[col]
             ascending = sort_states_reduction[col]
             sorted_data = df_reduction.sort_values(by=[internal_col], ascending=ascending)
@@ -221,6 +266,12 @@ class ResultsFrame(ctk.CTkFrame):
 
         # Function to filter data based on search query in reduction table
         def search_reduction_table(*args):
+            """
+            Filter the score deduction table based on the search query in the search entry.
+            
+            Args:
+                *args: Additional arguments passed to the function.
+            """
             query = search_entry_reduction.get().lower()
             if query == "":  # If the search box is empty, show all data
                 populate_reduction_table(df_reduction)
@@ -235,10 +286,16 @@ class ResultsFrame(ctk.CTkFrame):
         reduction_table.pack(fill="both", expand=True)
 
         # Double click event to display text comparison
-        similarity_table.bind("<Double-1>", lambda event: self.open_comparison_window(event, df_similarity))
-        reduction_table.bind("<Double-1>", lambda event: self.open_file_content_window(event, df_reduction))
+        similarity_table.bind("<Double-1>", lambda event: self.open_comparison_window(event))
+        reduction_table.bind("<Double-1>", lambda event: self.open_file_content_window(event))
 
-    def open_comparison_window(self, event, df_similarity):
+    def open_comparison_window(self, event):
+        """
+        Opens a new window to display the comparison between two files when a row is double-clicked.
+        
+        Args:
+            event (tk.Event): The event object containing information about the event.
+        """
         selected_item = event.widget.selection()
         if not selected_item:
             return
@@ -250,7 +307,13 @@ class ResultsFrame(ctk.CTkFrame):
         # Create a comparison window
         ComparisonDisplayWindow(self, file1, file2, self.parent.controller)
 
-    def open_file_content_window(self, event, df_reduction):
+    def open_file_content_window(self, event):
+        """
+        Opens a new window to display the content of a file when a row is double-clicked.
+
+        Args:
+            event (tk.Event): The event object containing information about the event.
+        """
         selected_item = event.widget.selection()
         if not selected_item:
             return
