@@ -173,11 +173,15 @@ class PlagiarismController:
             str: Error message if an error occurred, otherwise None.
         """
         try:
+            if 'File Name' not in df_reduction.columns:
+                return None, "error_excel_result"
+            
+            df_reduction['Cluster'] = df_reduction['File Name'].map(file_cluster_mapping)
+
             with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
                 df_reduction.to_excel(writer, sheet_name='Score Deduction', index=False)
                 df_similarity.to_excel(writer, sheet_name='Similarity', index=False)
-                df_cluster_mapping = pd.DataFrame(list(file_cluster_mapping.items()), columns=['File Name', 'Cluster'])
-                df_cluster_mapping.to_excel(writer, sheet_name='Cluster Mapping', index=False)
+            
             return None
         except Exception as e:
             return str(e)

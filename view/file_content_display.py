@@ -34,18 +34,21 @@ class FileContentDisplayWindow(ctk.CTkToplevel):
         self.file_name = file_name
         self.content = content
         self.controller = controller
-        self.localization = controller.localization  # Use the localization object from the controller
+        self.localization = controller.localization
 
         # Window properties
         self.title(self.localization.get("file_content_title").format(file_name=self.file_name))
-        self.geometry("900x600")
+
+        if self.file_name.lower().endswith('.pdf'):
+            self.geometry("600x600")
+        else:
+            self.geometry("900x600")
 
         self.setup_ui()
 
     def setup_ui(self):
         """
-        Sets up the user interface for displaying file content, including a title,
-        text view, and scrollbars for navigation.
+        Sets up the user interface for displaying file content, including a title and text view.
 
         Args:
             file_name (str): The name of the file to display.
@@ -69,21 +72,11 @@ class FileContentDisplayWindow(ctk.CTkToplevel):
         # Text widget for displaying the file content in a non-editable manner
         text_widget = ctk.CTkTextbox(text_frame, wrap="none")
         text_widget.pack(side="left", fill="both", expand=True)
-        text_widget.insert("1.0", self.content)  # Insert content into the text widget
-        text_widget.configure(state="disabled")  # Make the text view read-only
+        text_widget.insert("1.0", self.content)
+        text_widget.configure(state="disabled")
 
         # Set the appropriate font based on the file type
         self.set_programming_font(text_widget, self.file_name)
-
-        # Vertical scrollbar for navigating the file content
-        sync_scroll_verticalbar = ctk.CTkScrollbar(text_frame, command=text_widget.yview)
-        sync_scroll_verticalbar.pack(side="right", fill="y")
-        text_widget.configure(yscrollcommand=sync_scroll_verticalbar.set)
-
-        # Horizontal scrollbar for navigating long lines of text
-        sync_scrollbar_horizontal = ctk.CTkScrollbar(self, command=text_widget.xview, orientation="horizontal")
-        sync_scrollbar_horizontal.pack(side="bottom", fill="x")
-        text_widget.configure(xscrollcommand=sync_scrollbar_horizontal.set)
 
     def set_programming_font(self, widget, filepath):
         """

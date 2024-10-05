@@ -1,6 +1,6 @@
 customtkinter
 python-docx
-PyPDF2
+pdfplumber
 pandas
 openpyxl
 scikit-learn

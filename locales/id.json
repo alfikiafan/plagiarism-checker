@@ -18,6 +18,7 @@
     "error_max_reduction_number": "Pengurangan maksimal harus berupa angka.",
     "error_select_output": "Pilih lokasi untuk menyimpan hasil.",
     "error_reading_files": "Beberapa berkas gagal dibaca",
+    "error_excel_result": "Kolom 'File Name' tidak ditemukan di df_reduction.",
     "output_saved_successfully": "Output berhasil disimpan di",
     "error_saving_file": "Kesalahan menyimpan file Excel:",
     "results_window_title": "Hasil Pemeriksaan Plagiarisme",

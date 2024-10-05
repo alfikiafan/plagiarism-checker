@@ -3,7 +3,7 @@
 import os
 from docx import Document
 from utils.constants import PROGRAMMING_EXTENSIONS
-import PyPDF2
+import pdfplumber
 
 class FileReader:
     """
@@ -80,11 +80,13 @@ class FileReader:
         Returns:
             str: The content of the .pdf file.
         """
-        with open(filepath, 'rb') as file:
-            reader = PyPDF2.PdfReader(file)
-            text = ''
-            for page in reader.pages:
-                extracted_text = page.extract_text()
-                if extracted_text:
-                    text += extracted_text
+        text = ''
+        try:
+            with pdfplumber.open(filepath) as pdf:
+                for page in pdf.pages:
+                    extracted_text = page.extract_text()
+                    if extracted_text:
+                        text += extracted_text + '\n'
+        except Exception as e:
+            text = f"Error reading PDF file: {e}"
         return text

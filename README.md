@@ -109,7 +109,7 @@ The application relies on several Python libraries. These are listed in `require
 
 - **customtkinter**: For creating a modern-looking GUI based on Tkinter.
 - **python-docx**: For reading `.docx` files.
-- **PyPDF2**: For reading `.pdf` files.
+- **pdfplumber**: For reading `.pdf` files.
 - **pandas**: For data manipulation and exporting results to Excel.
 - **openpyxl**: For writing data to Excel files.
 

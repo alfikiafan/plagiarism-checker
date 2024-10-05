@@ -18,6 +18,7 @@
     "error_max_reduction_number": "Maximum reduction must be a number.",
     "error_select_output": "Please select a location to save the results.",
     "error_reading_files": "Some files failed to be read",
+    "error_excel_result":"Column 'File Name' not found in df_reduction.",
     "output_saved_successfully": "Output successfully saved to",
     "error_saving_file": "Error saving Excel file:",
     "results_window_title": "Plagiarism Check Results",

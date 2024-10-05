@@ -20,7 +20,7 @@ class ResultsFrame(ctk.CTkFrame):
         Args:
             parent (ctk.CTk): The parent window or frame.
         """
-        super().__init__(parent, fg_color="#2B2B2B")
+        super().__init__(parent)
         self.parent = parent
         self.setup_ui()
 
