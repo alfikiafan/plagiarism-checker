@@ -1,9 +1,12 @@
 # /controller/plagiarism_controller.py
 
+import json
+import os
 import pandas as pd
 from model.file_reader import FileReader
 from model.plagiarism_checker import PlagiarismChecker
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 from utils.constants import THRESHOLD_DEFAULT, MAX_REDUCTION_DEFAULT
 from sklearn.cluster import KMeans
 import os
@@ -23,6 +26,28 @@ class PlagiarismController:
         self.file_reader = FileReader(self.localization)
         self.plagiarism_checker = PlagiarismChecker(self.localization)
         self.files_content = {}
+        self.indonesian_stop_words = self.load_indonesian_stop_words()
+
+    def load_indonesian_stop_words(self):
+        """
+        Loads Indonesian stop words from a JSON file.
+
+        Returns:
+            set: A set of Indonesian stop words.
+        
+        Raises:
+            FileNotFoundError: If the stop words JSON file is not found.
+            json.JSONDecodeError: If the JSON file is malformed.
+        """
+        try:
+            stop_words_path = os.path.join(os.path.dirname(__file__), '..', 'utils', 'stopwords', 'indonesia.json')
+            with open(stop_words_path, 'r', encoding='utf-8') as f:
+                stop_words = json.load(f)
+            return set(stop_words)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Stop words file not found at {stop_words_path}")
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Error decoding JSON from stop words file: {e}")
 
     def process_files(self, file_paths, threshold, max_reduction):
         """
@@ -93,15 +118,20 @@ class PlagiarismController:
         Returns:
             dict: Mapping of the file basename to the cluster number.
         """
-        # Step 1: Vectorize the content of each file using TF-IDF
-        vectorizer = TfidfVectorizer(stop_words='english')
+        from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
+
+        # Menggabungkan stop words Bahasa Inggris dan Bahasa Indonesia
+        combined_stop_words = list(ENGLISH_STOP_WORDS.union(self.indonesian_stop_words))
+
+        # Langkah 1: Vectorize the content of each file menggunakan TF-IDF dengan stop words gabungan
+        vectorizer = TfidfVectorizer(stop_words=combined_stop_words)
         file_paths = list(files_content.keys())  # Full file paths
         contents = list(files_content.values())
 
-        # Convert file content into numerical representation
+        # Mengonversi konten file menjadi representasi numerik
         tfidf_matrix = vectorizer.fit_transform(contents)
 
-        # Step 2: Perform clustering with KMeans
+        # Langkah 2: Melakukan clustering dengan KMeans
         unique_points = len(set(tuple(row.toarray()[0]) for row in tfidf_matrix))  # Number of unique points
         if n_clusters > unique_points:
             n_clusters = unique_points
@@ -109,7 +139,7 @@ class PlagiarismController:
         kmeans = KMeans(n_clusters=n_clusters, random_state=0)
         kmeans.fit(tfidf_matrix)
 
-        # Step 3: Clustering results (basename file_name -> cluster_number)
+        # Langkah 3: Hasil clustering (basename file_name -> cluster_number)
         file_cluster_mapping = {os.path.basename(file_paths[i]): kmeans.labels_[i] for i in range(len(file_paths))}
 
         return file_cluster_mapping
