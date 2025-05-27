@@ -136,4 +136,4 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## Contact
 
-For any questions or suggestions, feel free to reach out to me at [alfiki.diastama@gmail.com](mailto:alfiki.diastama@gmail.com).
+For any questions or suggestions, feel free to reach out to me at my personal website.
