@@ -133,7 +133,3 @@ Contributions are welcome! To contribute to this project:
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
-
-## Contact
-
-For any questions or suggestions, feel free to reach out to me at my personal website.
